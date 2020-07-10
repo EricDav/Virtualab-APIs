@@ -1,0 +1,17 @@
+{
+    "autoload": {
+        "psr-4": {
+            "VirtualLab\\": "src/"
+        }
+    },
+    "name": "vendor/virtual-lab",
+    "description": "APIs for virtual lab project",
+    "type": "project",
+    "authors": [
+        {
+            "name": "David Alienyi",
+            "email": "alienyidavid4christ@gmail.com"
+        }
+    ],
+    "require": {}
+}
