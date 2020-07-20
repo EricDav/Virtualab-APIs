@@ -13,7 +13,7 @@ class Request {
     public function __construct() {
         $this->method =  $_SERVER['REQUEST_METHOD'];
         $this->host = $_SERVER['HTTP_HOST'];
-        $this->session = (object) $_SESSION;
+        // $this->session = (object) $_SESSION;
         $this->serverName = $_SERVER['SERVER_NAME'];
         $path = explode('?', $_SERVER['REQUEST_URI'])[0];
 
@@ -24,7 +24,7 @@ class Request {
         $obj = (object)array();
 
         if ($method == 'POST') {
-            $paramType = $_POST;
+            $paramType = sizeof($_POST) > 0 ? $_POST : (array)json_decode(file_get_contents("php://input"));
         } else if ($method == 'GET') {
             $paramType = $_GET;
         } else {
