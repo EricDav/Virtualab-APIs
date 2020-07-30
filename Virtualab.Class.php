@@ -1,11 +1,14 @@
 <?php 
+define('BASE_URL', '/api/v1');
 
 class VirtualLab {
     const BASE_URL = '/api/v1';
     const ROUTES = [
         'POST' => array(
-            self::BASE_URL . '/users' => 'User@create',
-            self::BASE_URL . '/users/login' => 'User@login'
+            BASE_URL . '/users' => 'User@create',
+            BASE_URL . '/users/login' => 'User@login',
+            BASE_URL . '/schools' => 'School@create',
+            BASE_URL . '/class-rooms' => 'School@addClass',
         ),
 
         'GET' => array(
@@ -15,8 +18,10 @@ class VirtualLab {
 
     const ALLOWED_PARAM = [
         'POST' => array(
-            self::BASE_URL . '/users'  => ['name', 'email', 'password'],
-            self::BASE_URL. '/users/login'  => ['email', 'password'],
+            BASE_URL . '/users'  => ['name', 'email', 'password'],
+            BASE_URL. '/users/login'  => ['email', 'password'],
+            BASE_URL . '/schools' => ['name', 'phone_number', 'country', 'city', 'address', 'token'],
+            BASE_URL . '/class-rooms' => ['name', 'school_id'],
         ),
     ];
 }

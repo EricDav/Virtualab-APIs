@@ -13,5 +13,7 @@
             "email": "alienyidavid4christ@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+        "nesbot/carbon": "^2.37"
+    }
 }

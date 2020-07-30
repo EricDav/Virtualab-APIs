@@ -31,8 +31,18 @@ class Request {
             // TODO method not allowed;
         }
 
+        $errorMessages = array();
+
         foreach($allowedParams as $param) {
-            $obj->$param = isset($paramType[$param]) ? $paramType[$param] : null;
+            $obj->$param = isset($paramType[$param]) ? filter_var($paramType[$param], FILTER_SANITIZE_STRING) : null;
+
+            if  (!isset($paramType[$param])) {
+                $errorMessages[$param] = $param . ' is required';
+            }
+        }
+
+        if (sizeof($errorMessages) > 0) {
+            return (object)array('success' => false, 'message' => $errorMessages);
         }
 
         if ($method == 'POST') {
@@ -40,6 +50,8 @@ class Request {
         } else {
             $this->query = $obj;
         }
+        
+        return (object)array('success' => true);
     }
 }
 

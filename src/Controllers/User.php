@@ -80,7 +80,7 @@
             }
 
             if (is_array($user) && password_verify($request->body->password, $user['password'])) {
-                $jwt = JWT::generateJWT(json_encode(['email' => $user['email'], 'name' => $user['name'], 'id' => $user['id']]));
+                $jwt = JWT::generateJWT(json_encode(['email' => $user['email'], 'name' => $user['name'], 'id' => $user['id'], 'exp' => (time()) + 360000]));
 
                 $this->jsonResponse(array('success' => true, 'message' => 'logged in successfully', 'token' => $jwt),
                 Controller::HTTP_OKAY_CODE);
