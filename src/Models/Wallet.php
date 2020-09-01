@@ -1,9 +1,10 @@
 <?php
     namespace VirtualLab\Models;
 
-    class School {
-        const TABLE_NAME = 'schools';
+    use VirtualLab\Models;
 
+    class Wallet {
+        const TABLE_NAME = 'wallets';
         /**
          * Create a new  school entry into the users database
          * @ return true if successfull
@@ -14,7 +15,7 @@
         }
 
         /**
-         * find a school either by its attributes
+         * find a user either by id or email
          * @param $param {array} the prameters to find either an id or email
          */
         public static function findOne($dbConnection, $params) {
@@ -22,10 +23,10 @@
         }
 
         /**
-         * find a school either by its attributes
-         * @param $param {array} the prameters to find either an id or email
+         * Updates wallet
          */
-        public static function find($dbConnection, $params) {
-            return Model::find($dbConnection, $params, self::TABLE_NAME);
+        public static function update($dbConnection, $updateParams, $whereParams) {
+            return Model::update($dbConnection,  $updateParams, $whereParams, self::TABLE_NAME);
         }
     }
+    

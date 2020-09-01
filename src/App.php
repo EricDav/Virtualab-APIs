@@ -1,4 +1,7 @@
 <?php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token');
 
 require_once '../Virtualab.Class.php';
 require_once '../vendor/autoload.php';
@@ -40,7 +43,7 @@ use VirtualLab\Enviroment\Enviroment;
                 $controllerObject->$method($request);
             
             } else {
-                $this->jsonResponse(array('success' => false, 'message' => 'route not defined'), 404);
+                $this->jsonResponse(array('success' => false, 'message' => 'route not defined'), 200);
                 // TODO 404 
             }
         }

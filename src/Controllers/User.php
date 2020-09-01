@@ -4,6 +4,8 @@
     use VirtualLab\Helpers\Helper;
     use VirtualLab\Helpers\JWT;
     use VirtualLab\Models\User as UserModel;
+    use VirtualLab\Models\Model;
+    use VirtualLab\Models\Wallet;
 
     class User extends Controller {
         public function __construct() {
@@ -98,11 +100,139 @@
                 array_push($errorMessages, $isValidEmail['message']);
             }
 
-            if (empty(trim($password))) {
+            if (empty(trim($password))) { 
                 array_push($errorMessages, 'Password is required');
             }
 
             return $errorMessages;
+        }
+
+        public function transactions($req) {
+            $this->dbConnection->open();
+            $tokenPayload = JWT::verifyToken($req->query->token);
+            if (!$tokenPayload->success) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Authentication failed'), 401);
+                // TODO
+                // verify token MIGHT TAKE THIS TO A SEPERATE MIDDLEWARE
+            }
+            $tokenPayload = json_decode($tokenPayload->payload);
+
+            $transactions = Model::find($this->dbConnection, array(
+                'user_id' => $tokenPayload->id
+            ), 'users_transactions');
+
+            if ($transactions) {
+                $this->jsonResponse(array('success' => true, 'data' => $transactions), 200);
+            }
+            $this->jsonResponse(array('success' => false, 'message' => 'Internal server error'), 500);
+        }
+
+        public function transfer($req) {
+            $this->dbConnection->open();
+            $tokenPayload = JWT::verifyToken($req->body->token);
+            if (!$tokenPayload->success) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Authentication failed'), 401);
+                // TODO
+                // verify token MIGHT TAKE THIS TO A SEPERATE MIDDLEWARE
+            }
+            $tokenPayload = json_decode($tokenPayload->payload);
+            if ($req->body->email == $tokenPayload->email) {
+                $this->jsonResponse(array('success' => false, 'message' => 'You can transfer to yourself'), Controller::HTTP_BAD_REQUEST_CODE);
+            }
+            $user = UserModel::findOne($this->dbConnection, array(
+                'email' => $req->body->email
+            ));
+            $this->validateTransfer($req, $user);
+            $withdrawBalance = $this->withdraw($tokenPayload->id, $req->body->amount);
+            $depositBalance = $this->deposit($user['id'], $req->body->amount);
+            $transactions = array(
+                array(
+                    'user_id' => $tokenPayload->id,
+                    'amount' => $req->body->amount,
+                    'transaction_type' => 0,
+                    'date_created' => gmdate("Y-m-d\ H:i:s"),
+                    'transaction' => 'Transfer to ' . $user['email'],
+                    'balance' => $withdrawBalance
+                ),
+                array(
+                    'user_id' => $user['id'],
+                    'amount' => $req->body->amount,
+                    'transaction_type' => 1,
+                    'date_created' => gmdate("Y-m-d\ H:i:s"),
+                    'transaction' => 'Transfer from ' . $tokenPayload->email,
+                    'balance' =>  $depositBalance
+                )
+            );
+            Model::createAll($this->dbConnection, $transactions, 'users_transactions');
+            $this->jsonResponse(array('success' => true, 'message' => 'Transfarred successfully'), 200);
+        }
+
+        public function validateTransfer($req, $user) {
+            if (!$user) {
+                $this->jsonResponse(array('success' => false, 'message' => 'User not found'), Controller::HTTP_NOT_FOUND);
+            }
+
+            // Checks if user is an admin
+            if ($user['role'] != 3) {
+                 $this->jsonResponse(array('success' => false, 'message' => 'User not an admin'), Controller::HTTP_BAD_REQUEST_CODE);
+            }
+        }
+
+        public function verifyPayment($req) {
+            $this->dbConnection->open();
+            if (!is_numeric($req->body->user_id)) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Invalid user id'), Controller::HTTP_BAD_REQUEST_CODE);
+            }
+
+            if(!UserModel::findOne($this->dbConnection, array(
+                'id' => $req->body->user_id,
+                'role' => 3
+                ))) {
+                $this->jsonResponse(array('success' => false, 'message' => 'User not an admin'), Controller::HTTP_BAD_REQUEST_CODE); 
+            }
+
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => "https://api.paystack.co/transaction/verify/" . $req->body->ref,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => "GET",
+                CURLOPT_HTTPHEADER => array(
+                "Authorization: Bearer sk_test_65ac9388bcd60415b66744729a2a522877c95980",
+                "Cache-Control: no-cache",
+                ),
+            ));
+            
+            $response = curl_exec($curl);
+            $err = curl_error($curl);
+            curl_close($curl);
+            
+            if ($err) {
+                echo "cURL Error #:" . $err; exit;
+            } else {
+                $resObj = json_decode($response);
+                if (!$resObj->status) {
+                    $this->jsonResponse(array('success' => false, 'message' => 'Something went wrong while verifying'), Controller::HTTP_BAD_REQUEST_CODE);
+                    //log error here
+                }
+
+                $amount = $resObj->data->amount;
+                $amount = substr($amount, 0, strlen($amount) - 2);
+                $balance = $this->deposit($req->body->user_id, $amount);
+                // Add to the trasanction history of user
+                Model::create($this->dbConnection, array(
+                    'user_id' => $req->body->user_id,
+                    'amount' => $amount,
+                    'transaction_type' => 1,
+                    'date_created' => gmdate("Y-m-d\ H:i:s"),
+                    'transaction' => 'Deposit with paystack',
+                    'balance' => $balance
+                ), 'users_transactions');
+                $this->jsonResponse(array('success' => true, 'message' => 'Deposited successfully'), 200);
+            }
         }
     }
 

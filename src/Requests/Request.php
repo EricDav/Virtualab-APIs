@@ -7,13 +7,11 @@ class Request {
     public $body;
     public $host;
     public $session;
-    // public $uri = $_SERVER['REQUEST_URI'];
     public $serverName;
     
     public function __construct() {
         $this->method =  $_SERVER['REQUEST_METHOD'];
         $this->host = $_SERVER['HTTP_HOST'];
-        // $this->session = (object) $_SESSION;
         $this->serverName = $_SERVER['SERVER_NAME'];
         $path = explode('?', $_SERVER['REQUEST_URI'])[0];
 

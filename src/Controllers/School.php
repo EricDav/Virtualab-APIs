@@ -19,6 +19,7 @@
         public function create($request) {
             $tokenPayload = JWT::verifyToken($request->body->token);
             if (!$tokenPayload->success) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Authentication failed'), 401);
                 // TODO
                 // verify token MIGHT TAKE THIS TO A SEPERATE MIDDLEWARE
             }
@@ -27,13 +28,16 @@
             $request->body->user_id = json_decode($tokenPayload->payload)->id;
             $this->validateSchoolData($this->dbConnection, $request);
 
+
             $params = array (
                 'name' => $request->body->name,
                 'phone_number' => $request->body->phone_number,
                 'country' => $request->body->country,
                 'city' => $request->body->city,
                 'address' => $request->body->address,
-                'user_id' => $request->body->user_id
+                'user_id' => $request->body->user_id,
+                'email' => $request->body->email,
+                'date_created' =>  gmdate("Y-m-d\ H:i:s")
             );
 
             $result = SchoolModel::create($this->dbConnection, $params);
@@ -87,15 +91,35 @@
             if ($classRoom === 'Server error') {
                 $this->jsonResponse(array('success' => false, 'message' => 'Server error'), 500);
             }
+
             if ($classRoom) {
                 $this->jsonResponse(array('success' => false, 'message' => 'Classroom name already exist in the school with the id ' . $req->body->school_id), 400);
             }
-
 
             if (ClassRoom::create($this->dbConnection, array('school_id' => $req->body->school_id, 'name' => $req->body->name))) {
                 $this->jsonResponse(array('success' => true, 'message' => 'classroom for  school_id ' . $req->body->school_id . ' created successfully'), 200);
             }
 
+            $this->jsonResponse(array('success' => false, 'message' => 'Server error'), 500);
+        }
+
+        public function get($request) {
+            $this->dbConnection->open();
+            $tokenPayload = JWT::verifyToken($request->query->token);
+            if (!$tokenPayload->success) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Authentication failed'), 401);
+                // TODO
+                // verify token MIGHT TAKE THIS TO A SEPERATE MIDDLEWARE
+            }
+            $tokenPayload = json_decode($tokenPayload->payload);
+            $schools = SchoolModel::find($this->dbConnection, array('user_id' => $tokenPayload->id));
+
+            if ($schools) {
+                $this->jsonResponse(array('success' => true, 'data' => $schools, 'message' => 'Schools retrieved successfully'), 200);
+            }
+            if (is_array($schools)) {
+                $this->jsonResponse(array('success' => true, 'data' => $schools, 'message' => 'School created successfully'), 200);
+            }
             $this->jsonResponse(array('success' => false, 'message' => 'Server error'), 500);
         }
     }

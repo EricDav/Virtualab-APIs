@@ -29,3 +29,4 @@
             return Model::findOne($dbConnection, $params, self::TABLE_NAME);
         }
     }
+    
