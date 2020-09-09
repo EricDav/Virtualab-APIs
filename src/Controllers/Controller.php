@@ -26,14 +26,19 @@ abstract class Controller {
     public function deposit($userId, $amount) { 
         $userWallet = WalletModel::findOne($this->dbConnection, array('user_id' => $userId));
         if (!$userWallet) {
-            return WalletModel::create($this->dbConnection, array('user_id' => $userId, 'amount' => $amount));
+            $userWallet = WalletModel::create($this->dbConnection, array('user_id' => $userId, 'amount' => $amount));
+
+            if ($userWallet) {
+                return $amount;
+            }
+            return $amount;
         }
         $updateParam = array('amount' => $userWallet['amount'] + $amount);
         $whereParam = array('user_id' => $userWallet['user_id']);
         if (!WalletModel::update($this->dbConnection, $updateParam, $whereParam)) {
             $this->jsonResponse(array('success' => true, 'message' => 'Server error occured'), 500);
         }
-        return $userWallet['amount'] + $amount;
+        return (int)$userWallet['amount'] + $amount;
     }
 
     public function withdraw($userId, $amount) {
@@ -47,6 +52,6 @@ abstract class Controller {
         if (!WalletModel::update($this->dbConnection, $updateParam, $whereParam)) {
             $this->jsonResponse(array('success' => true, 'message' => 'Server error occured'), 500);
         }
-        return $userWallet['amount'] - $amount;
+        return (int)$userWallet['amount'] - $amount;
     }
 }

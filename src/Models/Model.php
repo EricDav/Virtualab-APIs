@@ -66,7 +66,7 @@
                     }
                 }
 
-                $whereClause = self::generateWhereClause($tableName, $whereParams);
+                $whereClause = self::generateWhereClause($tableName, $whereParams, null, null, null, null);
                 $sql .= ' WHERE' . $whereClause['clause'];
                 $stmt= $dbConnection->pdo->prepare($sql);
                 return $stmt->execute($whereClause['params']);
@@ -107,15 +107,15 @@
             );
         }
 
-        public static function findOne($dbConnection, $params, $tableName) {
-            return self::__find($dbConnection, $params, $tableName, FIND_ONE);
+        public static function findOne($dbConnection, $params, $tableName, $offset=null, $limit=null, $order=null, $orderBy=null) {
+            return self::__find($dbConnection, $params, $tableName, FIND_ONE, $offset, $limit, $order, $orderBy);
         }
 
-        public static function find($dbConnection, $params, $tableName) {
-            return self::__find($dbConnection, $params, $tableName, FIND);
+        public static function find($dbConnection, $params, $tableName, $offset=null, $limit=null, $order=null, $orderBy=null) {
+            return self::__find($dbConnection, $params, $tableName, FIND, $offset, $limit, $order, $orderBy);
         }
 
-        public static function __find($dbConnection, $params, $tableName, $callee) {
+        public static function __find($dbConnection, $params, $tableName, $callee, $offset, $limit, $order, $orderBy) {
             try {
 
                 if (!is_array($params)) {
@@ -123,9 +123,8 @@
                 }
                 // Generate where clause
 
-                $whereClause = self::generateWhereClause($tableName, $params);                
+                $whereClause = self::generateWhereClause($tableName, $params, $offset, $limit, $order, $orderBy);                
                 $sql = 'SELECT * FROM ' . $tableName . (!$params ? '' : ' WHERE' . $whereClause['clause']);
-                // var_dump($sql); exit;
 
                 $stmt= $dbConnection->pdo->prepare($sql);
                 $stmt->execute($whereClause['params']);
@@ -150,7 +149,7 @@
          * @param $tableName the name of the table we want to find rows e.g users
          * @param $findBy the attributes we want to filter from e.g id, email
          */
-        public static function generateWhereClause($tableName, $findBy) {
+        public static function generateWhereClause($tableName, $findBy, $offset, $limit, $order, $orderBy) {
             $whereClause = '';
             $paramsVal = [];
             $counter = 0;
@@ -164,6 +163,22 @@
 
                 array_push($paramsVal, $val);
                 $counter+=1;
+            }
+
+            // Add order by
+            if ($order) {
+                $whereClause .= ' ORDER BY ' . $tableName . '.' . $order . ' ' . $orderBy;
+            }
+
+            // Add limit
+            if ($limit) {
+                $whereClause .= ' LIMIT ' . $limit;
+            }
+
+                        
+            // Add offset
+            if ($offset) {
+                $whereClause .= ' OFFSET ' . $offset;
             }
 
             return array(

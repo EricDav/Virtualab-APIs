@@ -26,6 +26,7 @@ CREATE TABLE classrooms(
     id int NOT NULL AUTO_INCREMENT,
     name VARCHAR(225) NOT NULL,
     school_id int NOT NULL,
+    user_id int,
     PRIMARY KEY(id),
     INDEX(school_id),
     FOREIGN KEY (school_id) REFERENCES schools(id)
@@ -90,4 +91,17 @@ CREATE TABLE transactions (
     source_code VARCHAR(5), /** The source of the transaction might be from pin or card*/
     source_id int, /** The id for instance the pin id*/
     amount VARCHAR(6)
+);
+
+CREATE TABLE students (
+    user_id int NOT NULL,
+    school_id int NOT NULL,
+    classroom_id int NOT NULL
 )
+
+CREATE TABLE teachers (
+    user_id int NOT NULL,
+    teacher_id int NOT NULL
+)
+
+SELECT () classooms.id, classrooms.name, schools.name as school_name, schools.phone_number, schools.country, schools.city, schools.address, users.name as teacher from classrooms INNER JOIN schools ON schools.id = classrooms.school_id LEFT JOIN users ON classrooms.`user_id` = users.id;

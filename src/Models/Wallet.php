@@ -18,8 +18,8 @@
          * find a user either by id or email
          * @param $param {array} the prameters to find either an id or email
          */
-        public static function findOne($dbConnection, $params) {
-            return Model::findOne($dbConnection, $params, self::TABLE_NAME);
+        public static function findOne($dbConnection, $params, $offset=null, $limit=null, $order=null, $orderBy=null) {
+            return Model::findOne($dbConnection, $params, self::TABLE_NAME, $offset, $limit, $order, $orderBy);
         }
 
         /**

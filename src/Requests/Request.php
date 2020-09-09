@@ -34,7 +34,7 @@ class Request {
         foreach($allowedParams as $param) {
             $obj->$param = isset($paramType[$param]) ? filter_var($paramType[$param], FILTER_SANITIZE_STRING) : null;
 
-            if  (!isset($paramType[$param])) {
+            if  (!isset($paramType[$param]) || !$paramType[$param]) {
                 $errorMessages[$param] = $param . ' is required';
             }
         }

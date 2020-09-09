@@ -17,10 +17,32 @@
             $errorMessages = $this->validateCreate($request);
             if (sizeof($errorMessages) == 0) {
                 $passwordHash = password_hash($request->body->password, PASSWORD_DEFAULT);
-                $userId = UserModel::create($this->dbConnection, $request->body->name, $request->body->email, $passwordHash);
+                $userId = UserModel::create($this->dbConnection, $request->body->name, $request->body->email, $passwordHash, $request->body->role);
                 if ($userId) {
+                    // Add to teachers if role is 2
+                    if ($request->body->role == 2) {
+                        //TODO determine what happens if this fails
+                        Model::create($this->dbConnection, array(
+                            'user_id' => $request->body->parent_id,
+                            'teacher_id' => $userId
+                        ), 'teachers');
+                    }
+
+                    // Add to students if role is 1
+                    if ($request->body->role == 1) {
+                        Model::create($this->dbConnection, array(
+                            'school_id' => $request->body->parent_id,
+                            'teacher_id' => $userId
+                        ), 'students');
+                    }
+
+                    $user = array(
+                        'id' => $userId,
+                        'email' => $request->body->email,
+                        'name' => $request->body->name
+                    );
                     $jwt = JWT::generateJWT(json_encode(['email' => $request->body->email, 'name' => $request->body->name, 'id' => $userId]));
-                    $this->jsonResponse(array('success' => true, 'message' => 'User created successfully', 'token' => $jwt), Controller::HTTP_OKAY_CODE);
+                    $this->jsonResponse(array('success' => true, 'message' => 'User created successfully', 'token' => $jwt, 'user' => $user), Controller::HTTP_OKAY_CODE);
                 }
 
                 $this->jsonResponse(array('success' => false, 'message' => 'Server error'), Controller::HTTP_SERVER_ERROR_CODE);
@@ -82,9 +104,10 @@
             }
 
             if (is_array($user) && password_verify($request->body->password, $user['password'])) {
+                $user['password'] = '';
                 $jwt = JWT::generateJWT(json_encode(['email' => $user['email'], 'name' => $user['name'], 'id' => $user['id'], 'exp' => (time()) + 360000]));
 
-                $this->jsonResponse(array('success' => true, 'message' => 'logged in successfully', 'token' => $jwt),
+                $this->jsonResponse(array('success' => true, 'user' => $user, 'message' => 'logged in successfully', 'token' => $jwt),
                 Controller::HTTP_OKAY_CODE);
             }
 
@@ -119,9 +142,9 @@
 
             $transactions = Model::find($this->dbConnection, array(
                 'user_id' => $tokenPayload->id
-            ), 'users_transactions');
+            ), 'users_transactions', null, null, 'date_created', 'desc');
 
-            if ($transactions) {
+            if (is_array($transactions)) {
                 $this->jsonResponse(array('success' => true, 'data' => $transactions), 200);
             }
             $this->jsonResponse(array('success' => false, 'message' => 'Internal server error'), 500);
@@ -233,6 +256,76 @@
                 ), 'users_transactions');
                 $this->jsonResponse(array('success' => true, 'message' => 'Deposited successfully'), 200);
             }
+        }
+
+        public function get($req) {
+            $this->dbConnection->open();
+            $tokenPayload = JWT::verifyToken($req->query->token);
+            if (!$tokenPayload->success) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Authentication failed'), 401);
+                // TODO
+                // verify token MIGHT TAKE THIS TO A SEPERATE MIDDLEWARE
+            }
+            $tokenPayload = json_decode($tokenPayload->payload);
+            $users = UserModel::find($this->dbConnection, array('role' => $req->query->role));
+            if (is_array($users)) {
+                $this->jsonResponse(array('success' => true, 'data' => $users), 200);
+            }
+            $this->jsonResponse(array('success' => false, 'message' => 'Server error'), Controller::HTTP_SERVER_ERROR_CODE);
+        }
+
+        /**
+         * Fetches the user summary like activations count, pins count
+         * and also the last ten transactions
+         */
+        public function userDetails($req) {
+            $this->dbConnection->open();
+            $tokenPayload = JWT::verifyToken($req->query->token);
+            if (!$tokenPayload->success) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Authentication failed'), 401);
+                // TODO
+                // verify token MIGHT TAKE THIS TO A SEPERATE MIDDLEWARE
+            }
+            $tokenPayload = json_decode($tokenPayload->payload);
+            $lastTenTransactions = Model::find($this->dbConnection, array(
+                'user_id' => $tokenPayload->id
+            ), 'users_transactions', null, 10, 'date_created', 'desc');
+
+            if (!is_array($lastTenTransactions)) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Server error'), Controller::HTTP_SERVER_ERROR_CODE);
+            }
+
+            $wallet = Wallet::findOne($this->dbConnection, array('user_id' => $tokenPayload->id));
+            $details = UserModel::getDetails($this->dbConnection, $tokenPayload->id, $tokenPayload->email);
+            if (!is_array($details)) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Server error'), Controller::HTTP_SERVER_ERROR_CODE);
+            }
+            $details['transactions'] = $lastTenTransactions;
+            $details['balance'] = $wallet ? $wallet : ['amount' => 0];
+            if (is_array($details)) {
+                $this->jsonResponse(array('success' => true, 'data' => $details), 200);
+            }
+            
+        }
+
+        public function getTeachers($req) {
+            $this->dbConnection->open();
+            $tokenPayload = JWT::verifyToken($req->query->token);
+            if (!$tokenPayload->success) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Authentication failed'), 401);
+                // TODO
+                // verify token MIGHT TAKE THIS TO A SEPERATE MIDDLEWARE
+            }
+            $tokenPayload = json_decode($tokenPayload->payload);
+            if (!is_numeric($tokenPayload->id)) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Invalid user id'), Controller::HTTP_BAD_REQUEST_CODE);
+            }
+            $teachers = UserModel::getTeachers($this->dbConnection, $tokenPayload->id);
+
+            if (is_array($teachers)) {
+                $this->jsonResponse(array('success' => true, 'data' => $teachers), 200);
+            }
+            $this->jsonResponse(array('success' => false, 'message' => 'Server error'), Controller::HTTP_SERVER_ERROR_CODE);
         }
     }
 

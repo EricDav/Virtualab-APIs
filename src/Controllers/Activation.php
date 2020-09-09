@@ -3,6 +3,7 @@
 
     use VirtualLab\Helpers\JWT;
     use VirtualLab\Models\Wallet as WalletModel;
+    use VirtualLab\Models\Pin as PinModel;
     use VirtualLab\Models\Model;
     use VirtualLab\Helpers\Helper;
     
@@ -14,7 +15,7 @@
         public function activateByPin($req) {
             $this->validateActivateByPin($req);
             $this->dbConnection->open();
-            $product = Model::findOne($this->dbConnection, array('id' => $req->body->product_id), 'products');
+            $product = Model::findOne($this->dbConnection, array('code' => substr($req->body->product_id, 0, 2)), 'products');
             if (!$product) {
                 $this->jsonResponse(array('success' => false, 'message' => 'Product not found'), 404);
             }
@@ -60,7 +61,7 @@
                 return true;
             }
 
-            $this->jsonResponse(array('success' => false, 'message' => 'Invalid pin user phone number or email expected'), 400);;
+            $this->jsonResponse(array('success' => false, 'message' => 'Invalid pin user phone number or email expected'), 400);
         }
 
         public function activate($req) {
@@ -89,7 +90,7 @@
             $activateData = array(
                 'product_id' => $req->body->product_id,
                 'activation_key' => $activationKey,
-                'user_identifier' => $tokenPayload->id,
+                'user_identifier' => $tokenPayload->email,
                 'date_generated' => gmdate("Y-m-d\ H:i:s")
             );
             if (Model::create($this->dbConnection, $activateData, 'activations')) {
@@ -128,7 +129,7 @@
             }
             $tokenPayload = json_decode($tokenPayload->payload);
 
-            $activations = Model::find($this->dbConnection, array('user_identifier' => $tokenPayload->id), 'activations');
+            $activations = Model::find($this->dbConnection, array('user_identifier' => $tokenPayload->email), 'activations');
             if (is_array($activations)) {
                 $this->jsonResponse(array('success' => true, 'data' => $activations, 'message' => 'Activations retrieved successfully'), 200);
             }

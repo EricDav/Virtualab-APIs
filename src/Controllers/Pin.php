@@ -22,6 +22,14 @@
             $tokenPayload = json_decode($tokenPayload->payload);
             
             if (is_numeric($req->body->num_pins) && is_numeric($req->body->amount)) {
+                if ((int)$req->body->num_pins < 1) {
+                    $this->jsonResponse(array('success' => false, 'message' => 'Pins quantity should be more than 0'), 400);
+                }
+
+                if ((int)$req->body->amount < 500) {
+                    $this->jsonResponse(array('success' => false, 'message' => 'Amount can not be less than 500'), 400);
+                }
+
                 $userWallet = WalletModel::findOne($this->dbConnection, array('user_id' => $tokenPayload->id));
                 $amountNeeded = (int)$req->body->amount * (int)$req->body->num_pins;
                 if (!$userWallet || $amountNeeded > $userWallet['amount']) {
@@ -51,6 +59,8 @@
                 }
 
                 $this->jsonResponse(array('success' => true, 'message' => 'Server error occured'), 500);
+            }  else {
+                $this->jsonResponse(array('success' => true, 'message' => 'Invalid parameters'), 500);
             }
         }
 
@@ -63,7 +73,7 @@
                 // verify token MIGHT TAKE THIS TO A SEPERATE MIDDLEWARE
             }
             $tokenPayload = json_decode($tokenPayload->payload);
-            $pins = PinModel::find($this->dbConnection, array('user_id' => $tokenPayload->id));
+            $pins = PinModel::find($this->dbConnection, array('user_id' => $tokenPayload->id), null, null, 'date_created', 'desc');
             
             if (is_array($pins)) {
                 $this->jsonResponse(array('success' => true, 'data' => $pins, 'message' => 'Pins retrieved successfully'), 200);
@@ -101,6 +111,21 @@
             }
 
             return $pins;
+        }
+
+        public function history($req) {
+            $this->dbConnection->open();
+            if (!is_numeric($req->query->pin_id)) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Invalid pin id'), 400);
+            }
+
+            $pinHistory = Model::find($this->dbConnection, array('pin_id' => $req->query->pin_id), 'pin_history', null, null, 'transaction_date', 'desc');
+
+            if (is_array($pinHistory)) {
+                $this->jsonResponse(array('success' => true, 'data' => $pinHistory, 'message' => 'Pins retrieved successfully'), 200);
+            }
+
+            $this->jsonResponse(array('success' => false, 'message' => 'Server error'), 500);
         }
     }
 ?>
