@@ -3,6 +3,8 @@ CREATE TABLE organization (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(225) NOT NULL,
     name VARCHAR(225),
+    role smallint NOT NULL,
+    phone_number VARCHAR(13),
     PRIMARY KEY(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -20,7 +22,6 @@ CREATE TABLE schools (
      INDEX(user_id)
      FOREIGN KEY (user_id) REFERENCES users(id)
 );
-
 
 CREATE TABLE classrooms(
     id int NOT NULL AUTO_INCREMENT,
@@ -64,6 +65,7 @@ CREATE TABLE activations (
     user_identifier VARCHAR(50) NOT NULL, /** this might be email or phone number*/
     name VARCHAR(120),
     date_generated DATETIME NOT NULL,
+    method VARCHAR(50),
     PRIMARY KEY(id)
 );
 
@@ -86,11 +88,13 @@ CREATE TABLE pin_history (
 /**
 * Activation transactions
 */
-CREATE TABLE transactions (
+CREATE TABLE users_transactions (
     id int NOT NULL AUTO_INCREMENT,
+    transaction VARCHAR(120),
     source_code VARCHAR(5), /** The source of the transaction might be from pin or card*/
     source_id int, /** The id for instance the pin id*/
-    amount VARCHAR(6)
+    amount VARCHAR(6),
+    balance VARCHAR(50)
 );
 
 CREATE TABLE students (

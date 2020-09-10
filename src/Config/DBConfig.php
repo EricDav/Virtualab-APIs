@@ -12,10 +12,10 @@
             ),
     
             'production' => array(
-                'user' => '',
-                'password' => '',
-                'host' => '',
-                'database' => '',
+                'user' => 'exclus36_user1',
+                'password' => 'Ilovedavid123', 
+                'host' => 'localhost',
+                'database' => 'exclus36_visual-lab',
                 'port' => 3306
             )
         );
