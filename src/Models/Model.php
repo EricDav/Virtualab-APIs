@@ -53,13 +53,18 @@
 
         public static function update($dbConnection, $updateParams, $whereParams, $tableName) {
             try {
+                // var_dump($updateParams); exit;
                 $clauseData = self::generateInsertClause($updateParams);
+                // var_dump($clauseData); exit;
                 $sql = 'UPDATE ' . $tableName . ' SET';
-                for($i = 0; $i < sizeof($clauseData['attributes']); $i++) {
+                for($i = 0; $i < sizeof($clauseData['attrData']); $i++) {
                     $attribute = $clauseData['attrData'][$i];
                     $value = $clauseData['params'][$i];
+                    if (!is_numeric($value) || $attribute = 'phone_number') {
+                        $value = '"' . $value . '"';
+                    }
 
-                    if ($i == sizeof($clauseData['attributes']) - 1) {
+                    if ($i == sizeof($clauseData['attrData']) - 1) {
                         $sql = $sql . ' ' . $attribute . ' = ' . $value;
                     } else {
                         $sql = $sql . ' ' . $attribute . ' = ' . $value . ',';

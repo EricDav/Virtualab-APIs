@@ -6,6 +6,8 @@ class VirtualLab {
     const ROUTES = [
         'POST' => array(
             BASE_URL . '/users' => 'User@create',
+            BASE_URL . '/users/update' => 'User@update',
+            BASE_URL . '/users/update/password' => 'User@updatePassword',
             BASE_URL . '/users/login' => 'User@login',
             BASE_URL . '/schools' => 'School@create',
             BASE_URL . '/classrooms' => 'School@addClass',
@@ -33,6 +35,8 @@ class VirtualLab {
     const ALLOWED_PARAM = [
         'POST' => array( 
             BASE_URL . '/users'  => ['name', 'email', 'password', 'role', 'parent_id'],
+            BASE_URL . '/users/update'  => ['name', 'email', 'phone_number', 'token'],
+            BASE_URL . '/users/update/password'  => ['new_password', 'old_password', 'token'],
             BASE_URL. '/users/login'  => ['email', 'password'],
             BASE_URL . '/schools' => ['name', 'phone_number', 'country', 'city', 'address', 'email', 'token'],
             BASE_URL . '/classrooms' => ['name', 'school_id', 'token'],

@@ -37,6 +37,14 @@
             return Model::find($dbConnection, $params, self::TABLE_NAME, $offset, $limit, $order, $orderByl);
         }
 
+
+        /**
+         * Updates user
+         */
+        public static function update($dbConnection, $updateParams, $whereParams) {
+            return Model::update($dbConnection,  $updateParams, $whereParams, self::TABLE_NAME);
+        }
+
         public static function getDetails($dbConnection, $userId, $email) {
             $schoolsCountSql = 'SELECT COUNT(*) AS count  FROM schools WHERE user_id=' . $userId;
             $pinsCountSql = 'SELECT COUNT(*) AS count  FROM pins WHERE user_id=' . $userId;
