@@ -53,14 +53,12 @@
 
         public static function update($dbConnection, $updateParams, $whereParams, $tableName) {
             try {
-                // var_dump($updateParams); exit;
                 $clauseData = self::generateInsertClause($updateParams);
-                // var_dump($clauseData); exit;
                 $sql = 'UPDATE ' . $tableName . ' SET';
                 for($i = 0; $i < sizeof($clauseData['attrData']); $i++) {
                     $attribute = $clauseData['attrData'][$i];
                     $value = $clauseData['params'][$i];
-                    if (!is_numeric($value) || $attribute = 'phone_number') {
+                    if (!is_numeric($value) || $attribute == 'phone_number') {
                         $value = '"' . $value . '"';
                     }
 
@@ -73,6 +71,7 @@
 
                 $whereClause = self::generateWhereClause($tableName, $whereParams, null, null, null, null);
                 $sql .= ' WHERE' . $whereClause['clause'];
+
                 $stmt= $dbConnection->pdo->prepare($sql);
                 return $stmt->execute($whereClause['params']);
 

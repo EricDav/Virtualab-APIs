@@ -46,7 +46,8 @@ CREATE TABLE users_transactions (
     amount VARCHAR(50) NOT NULL,
     transaction_type boolean NOT NULL,
     date_created DATETIME NOT NULL,
-    transaction VARCHAR(250)
+    transaction VARCHAR(250),
+    balance VARCHAR(50)
 );
 
 CREATE TABLE wallets (
@@ -92,7 +93,7 @@ CREATE TABLE users_transactions (
     id int NOT NULL AUTO_INCREMENT,
     transaction VARCHAR(120),
     source_code VARCHAR(5), /** The source of the transaction might be from pin or card*/
-    source_id int, /** The id for instance the pin id*/
+    user_id int, /** The id for instance the pin id*/
     amount VARCHAR(6),
     balance VARCHAR(50)
 );
