@@ -12,9 +12,18 @@
             parent::__construct();
         }
 
+        public function checkActivation($productId) {
+            $activation = Model::findOne($this->dbConnection, ['product_id' => $productId], 'activations');
+            if ($activation) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Product key already activated.', 'activation_key' => $activation['activation_key']), 400);
+            }
+        }
+
         public function activateByPin($req) {
             $this->validateActivateByPin($req);
             $this->dbConnection->open();
+            $this->checkActivation($req->body->product_id);
+
             $product = Model::findOne($this->dbConnection, array('code' => substr($req->body->product_id, 0, 2)), 'products');
             if (!$product) {
                 $this->jsonResponse(array('success' => false, 'message' => 'Product not found'), 404);

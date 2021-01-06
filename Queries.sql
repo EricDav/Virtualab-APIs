@@ -109,4 +109,35 @@ CREATE TABLE teachers (
     teacher_id int NOT NULL
 )
 
-SELECT () classooms.id, classrooms.name, schools.name as school_name, schools.phone_number, schools.country, schools.city, schools.address, users.name as teacher from classrooms INNER JOIN schools ON schools.id = classrooms.school_id LEFT JOIN users ON classrooms.`user_id` = users.id;
+CREATE TABLE product_keys (
+    product_key VARCHAR(20) NOT NULL,
+    user_id int NOT NULL,
+    date_created DATETIME NOT NULL
+);
+
+CREATE TABLE `app_users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(125) DEFAULT NULL,
+  `last_name` varchar(125) DEFAULT NULL,
+  `email` varchar(125) DEFAULT NULL,
+  `device_id` varchar(20) DEFAULT NULL,
+  `is_verified` tinyint(1) DEFAULT NULL,
+  `token` varchar(6) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE devices (
+    id int NOT NULL AUTO_INCREMENT,
+    product_key VARCHAR(20) NOT NULL,
+    property Text NOT NULL
+    PRIMARY KEY(id)
+)
+
+CREATE TABLE user_devices (
+    device_id int NOT NULL,
+    app_user_id int NOT NULL
+);
+
+
+
+-- SELECT () classooms.id, classrooms.name, schools.name as school_name, schools.phone_number, schools.country, schools.city, schools.address, users.name as teacher from classrooms INNER JOIN schools ON schools.id = classrooms.school_id LEFT JOIN users ON classrooms.`user_id` = users.id;

@@ -1,8 +1,10 @@
 <?php 
-define('BASE_URL', '/api/v1');
+define('BASE_URL', '/v1');
 
 class VirtualLab {
-    const BASE_URL = '/api/v1';
+    const BASE_URL = '/v1';
+    const ACTIVATION_KEY_SIZE = 15;
+    
     const ROUTES = [
         'POST' => array(
             BASE_URL . '/users' => 'User@create',
@@ -16,7 +18,9 @@ class VirtualLab {
             BASE_URL . '/user-activation' => 'Activation@activate',
             BASE_URL . '/transfers' => 'User@transfer',
             BASE_URL . '/verify-payment' => 'User@verifyPayment',
-            BASE_URL . '/classrooms/teachers' => 'School@assignTeacher'
+            BASE_URL . '/classrooms/teachers' => 'School@assignTeacher',
+            BASE_URL . '/registration' => 'User@registerAppUser',
+            BASE_URL . '/device' => 'Device@create',
         ),
 
         'GET' => array(
@@ -29,6 +33,7 @@ class VirtualLab {
             BASE_URL . '/user-details' => 'User@userDetails',
             BASE_URL . '/pins/history' => 'Pin@history',
             BASE_URL . '/teachers' => 'User@getTeachers',
+            BASE_URL . '/downloads' => 'Download@download',
         )
     ];
 
@@ -45,7 +50,8 @@ class VirtualLab {
             BASE_URL . '/user-activation' => ['product_id', 'token'],
             BASE_URL . '/transfers' => ['email', 'amount', 'token'],
             BASE_URL . '/verify-payment' => ['user_id',  'ref'],
-            BASE_URL . '/classrooms/teachers' => ['token', 'teacher_id', 'classroom_id']
+            BASE_URL . '/classrooms/teachers' => ['token', 'teacher_id', 'classroom_id'],
+            BASE_URL . '/registration' => ['first_name',  'last_name', 'product_key', 'email', 'country'],
         ),
         'GET' => array(
             BASE_URL . '/pins' => ['token'],
@@ -56,7 +62,8 @@ class VirtualLab {
             BASE_URL . '/classrooms' => ['token', 'school_id'],
             BASE_URL . '/user-details' => ['token'],
             BASE_URL . '/pins/history' => ['pin_id'],
-            BASE_URL . '/teachers' => ['token']
+            BASE_URL . '/teachers' => ['token'],
+            BASE_URL . '/downloads' => ['code'],
         )
     ];
 }

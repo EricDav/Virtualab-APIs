@@ -15,7 +15,7 @@ abstract class Controller {
         $this->dbConnection = new DBConnection();
     }
 
-    public function jsonResponse($response, $statusCode) {
+    public function jsonResponse($response, $statusCode=200) {
 
         header('Content-Type: application/json');
         header("HTTP/1.0 " . '200' . " ");

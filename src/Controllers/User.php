@@ -16,6 +16,7 @@
         public function create($request) {
             $this->dbConnection->open();
             $errorMessages = $this->validateCreate($request);
+
             if (sizeof($errorMessages) == 0) {
                 $passwordHash = password_hash($request->body->password, PASSWORD_DEFAULT);
                 $userId = UserModel::create($this->dbConnection, $request->body->name, $request->body->email, $passwordHash, $request->body->role);
@@ -53,6 +54,8 @@
         }
 
         public function validateCreate($request) {
+
+            // Start validations of request inputs
             $errorMessages = array();
             $nameArr = explode(' ', $request->body->name);
 
@@ -79,16 +82,88 @@
             if (!trim($request->body->password)) {
                 $errorMessages['password'] = 'Password is required';
             }
-
-            if (sizeof($errorMessages) == 0) {
-                $user = UserModel::findOne($this->dbConnection, array('email' => $request->body->email));
-
-                if ($user) {
-                    $errorMessages['email'] = 'User with this email already exist';
-                }
-            }
+            // Validation ends
 
             return $errorMessages;
+        }
+
+        public function registerAppUser($request) {
+            $errorMessages = array();
+
+            $firstName = $request->body->first_name;
+            $lastName = $request->body->last_name;
+            $email = $request->body->email;
+            $country = $request->body->country;
+            $productKey = $request->body->product_key;
+
+            $isValidFirstName = Helper::isValidName($firstName);
+            $isValidLastName = Helper::isValidName($lastName);
+            $isValidCountry = Helper::isValidName($country);
+            $isValidEmail = Helper::isValidEmail($request->body->email);
+
+            if (!$isValidEmail['isValid']) {
+                $errorMessages['email'] = $isValidEmail['message'];
+            }
+
+            if (!$isValidFirstName['isValid']) {
+                $errorMessages['first_name'] = $isValidFirstName['message'];
+            }
+
+            if (!$isValidLastName['isValid']) {
+                $errorMessages['last_name'] = $isValidLastName['message'];
+            }
+
+            if (!is_numeric($productKey) || strlen($productKey) != \VirtualLab::ACTIVATION_KEY_SIZE) {
+                $errorMessages['product_key'] = 'Invalid product key';
+            }
+
+            // Check for error messages
+            if (sizeof($errorMessages) == 0) {
+                $this->dbConnection->open();
+                $user = Model::findOne($this->dbConnection, array('email' => $request->body->email), 'app_users');
+                // var_dump($user); exit;
+                if (!$user) {
+            
+                    // Checks if user device has been registered
+                    $device = Model::findOne($this->dbConnection, array('product_key' => $productKey), 'devices');
+            
+                    // If device not found  return failure 
+                    if (!$device) {
+                        $this->jsonResponse(array('success' => false, 'message' => 'Device not registered'));
+                    }
+            
+                    $userDetails = array(
+                        'first_name' => $firstName,
+                        'last_name' => $lastName, 
+                        'email' => $email,
+                        'device_id' => $device['id'],
+                        'is_verified' => 0,
+                    );
+            
+                    // Register app user 
+                    $userId =  Model::create(
+                        $this->dbConnection,
+                        $userDetails,
+                        'app_users'
+                    );
+            
+                    // checks if user was created with the id
+                    if (!$userId) {
+                        $this->jsonResponse(array('success' => false, 'message' => 'Server error'));
+                    }
+            
+                    // Create user devices
+                    Model::create(
+                        $this->dbConnection,
+                        array('device_id' => $device['id'], 'app_user_id' => $userId),
+                        'user_devices'
+                    );
+            
+                    $this->jsonResponse(array('success' => true, 'message' => 'Created successfully'));
+                }
+            } else {
+                $this->jsonResponse(array('success' => false, 'message' => $errorMessages));
+            }
         }
 
         public function login($request) {

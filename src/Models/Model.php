@@ -47,6 +47,7 @@
                 }
                 return $dbConnection->pdo->lastInsertId();
             } catch(Exception $e) {
+                var_dump($e->getMessage()); exit;
                 return false;
             }
         }
@@ -76,7 +77,7 @@
                 return $stmt->execute($whereClause['params']);
 
             } catch (Exception $e) {
-
+                return null;
             }
         }
 
