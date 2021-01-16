@@ -12,10 +12,10 @@
             ),
     
             'production' => array(
-                'user' => 'exclus36_user1',
-                'password' => 'Ilovedavid123', 
+                'user' => 'mavinhub_user1',
+                'password' => 'mavinhub123', 
                 'host' => 'localhost',
-                'database' => 'exclus36_visual-lab',
+                'database' => 'mavinhub_staging-virtual-lab',
                 'port' => 3306
             )
         );

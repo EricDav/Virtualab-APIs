@@ -6,9 +6,12 @@
     use VirtualLab\Models\User as UserModel;
     use VirtualLab\Models\Model;
     use VirtualLab\Models\Wallet;
+    use VirtualLab\SendMail;
 
     class User extends Controller {
         const EXP_IN_SEC = 18000;
+        const DEFAUL_USERNAME_SUFFIX = '123awer>$#';
+
         public function __construct() {
             parent::__construct();
         }
@@ -19,34 +22,11 @@
 
             if (sizeof($errorMessages) == 0) {
                 $passwordHash = password_hash($request->body->password, PASSWORD_DEFAULT);
-                $userId = UserModel::create($this->dbConnection, $request->body->name, $request->body->email, $passwordHash, $request->body->role);
+                $userId = UserModel::create($this->dbConnection, $request->body->name, $request->body->email, $passwordHash, $request->body->phone_number);
                 if ($userId) {
-                    // Add to teachers if role is 2
-                    if ($request->body->role == 2) {
-                        //TODO determine what happens if this fails
-                        Model::create($this->dbConnection, array(
-                            'user_id' => $request->body->parent_id,
-                            'teacher_id' => $userId
-                        ), 'teachers');
-                    }
-
-                    // Add to students if role is 1
-                    if ($request->body->role == 1) {
-                        Model::create($this->dbConnection, array(
-                            'school_id' => $request->body->parent_id,
-                            'teacher_id' => $userId
-                        ), 'students');
-                    }
-
-                    $user = array(
-                        'id' => $userId,
-                        'email' => $request->body->email,
-                        'name' => $request->body->name
-                    );
                     $jwt = JWT::generateJWT(json_encode(['email' => $request->body->email, 'name' => $request->body->name, 'id' => $userId, 'exp' => (time()) + User::EXP_IN_SEC]));
                     $this->jsonResponse(array('success' => true, 'message' => 'User created successfully', 'token' => $jwt, 'user' => $user, 'exp' => User::EXP_IN_SEC), Controller::HTTP_OKAY_CODE);
                 }
-
                 $this->jsonResponse(array('success' => false, 'message' => 'Server error'), Controller::HTTP_SERVER_ERROR_CODE);
             } else {
                 $this->jsonResponse(array('success' => false, 'message' => $errorMessages), Controller::HTTP_BAD_REQUEST_CODE);
@@ -65,7 +45,10 @@
             $isValidFirstName = Helper::isValidName($firstName);
             $isValidLastName = Helper::isValidName($lastName);
             $isValidEmail = Helper::isValidEmail($request->body->email);
-            // var_dump($isValidLastName); exit;
+            
+            if (!is_numeric($request->body->phone_number) || strlen($request->body->phone_number) != 11) {
+                $errorMessages['phoneNumber'] = 'Invalid phone number';
+            }
 
             if (!$isValidEmail['isValid']) {
                 $errorMessages['email'] = $isValidEmail['message'];
@@ -113,33 +96,34 @@
                 $errorMessages['last_name'] = $isValidLastName['message'];
             }
 
-            if (!is_numeric($productKey) || strlen($productKey) != \VirtualLab::ACTIVATION_KEY_SIZE) {
+            if (!is_numeric($productKey) || strlen($productKey) != \VirtualLab::PRODUCT_KEY_SIZE) {
                 $errorMessages['product_key'] = 'Invalid product key';
             }
 
             // Check for error messages
             if (sizeof($errorMessages) == 0) {
                 $this->dbConnection->open();
+                // Checks if user device has been registered
+                $device = Model::findOne($this->dbConnection, array('product_key' => $productKey), 'devices');
+
+                
+                // If device not found  return failure 
+                if (!$device) {
+                    $this->jsonResponse(array('success' => false, 'message' => 'Device not registered'));
+                }
+
+                $yourCode = Helper::generatePin();
+                $userDetails = array(
+                    'first_name' => $firstName,
+                    'last_name' => $lastName, 
+                    'email' => $email,
+                    'device_id' => $device['id'],
+                    'is_verified' => 0,
+                    'token' => $yourCode
+                );
+                
                 $user = Model::findOne($this->dbConnection, array('email' => $request->body->email), 'app_users');
-                // var_dump($user); exit;
-                if (!$user) {
-            
-                    // Checks if user device has been registered
-                    $device = Model::findOne($this->dbConnection, array('product_key' => $productKey), 'devices');
-            
-                    // If device not found  return failure 
-                    if (!$device) {
-                        $this->jsonResponse(array('success' => false, 'message' => 'Device not registered'));
-                    }
-            
-                    $userDetails = array(
-                        'first_name' => $firstName,
-                        'last_name' => $lastName, 
-                        'email' => $email,
-                        'device_id' => $device['id'],
-                        'is_verified' => 0,
-                    );
-            
+                if (!$user) {            
                     // Register app user 
                     $userId =  Model::create(
                         $this->dbConnection,
@@ -158,12 +142,83 @@
                         array('device_id' => $device['id'], 'app_user_id' => $userId),
                         'user_devices'
                     );
-            
-                    $this->jsonResponse(array('success' => true, 'message' => 'Created successfully'));
+
+                    $message = "<h3>Your verification code: " . $yourCode . "</div>";
+                    $mail = new SendMail($email, "Account Verification", $message, true);
+                    $mail->send();
+                    $this->jsonResponse(array('success' => true, 'message' => 'Check your email address for the verification code and enter it below'));
+                } else {
+                    //If the user email exists, treat it as if the user formatted the system or
+                    // switched to a new device or is trying to re-verify for whatsoever reason.
+                    $result =  Model::update(
+                        $this->dbConnection,
+                        $userDetails,
+                        array('id' => $user['id']),
+                        'app_users'
+                    );
+
+                    if ($result) {
+                        $userDevice = Model::findOne(
+                            $this->dbConnection,
+                            array('app_user_id' => $user['id'], 'device_id' => $device['id']),
+                            'user_devices'
+                        );
+
+                        if (!$userDevice) {
+                            Model::create(
+                                $this->dbConnection,
+                                array('device_id' => $device['id'], 'app_user_id' => $userId),
+                                'user_devices'
+                            );
+                        }
+                        
+                        $message = "<h3>Your verification code: " . $yourCode . "</div>";
+                        $mail = new SendMail($email, "Account Verification", $message, true);
+                        $mail->send();
+                        $this->jsonResponse(array('success' => true, 'message' => 'Check your email address for the verification code and enter it below'));
+                    }
+
                 }
+
+
             } else {
                 $this->jsonResponse(array('success' => false, 'message' => $errorMessages));
             }
+        }
+
+        public function verifyAppUsers($request) {
+            $email = $request->body->email;
+            $token = $request->body->token;
+            $this->dbConnection->open();
+
+            $user = Model::findOne(
+                $this->dbConnection,
+                array('email' => $email),
+                'app_users'
+            );
+
+            if ($user['token'] && $user['token'] == $token) {
+                $username = $user['first_name'] . $user['last_name'] . $user['id'];
+                $hash = $hash = password_hash($username . User:: DEFAUL_USERNAME_SUFFIX, PASSWORD_DEFAULT);
+                Model::update(
+                    $this->dbConnection,
+                    array('username' => $username, 'is_verified' => 1, 'hash' => $hash),
+                    array('email' => $email),
+                    'app_users'
+                );
+
+                $this->jsonResponse(array(
+                    'success' => true,
+                    'message' => 'Successfully verified',
+                    'data' => array('username' => $username, 'hash' => $hash)
+                ));
+            }
+
+            $this->jsonResponse(array(
+                'success' => false,
+                'message' => 'Token is incorrect',
+                'data' => array()
+            ));
         }
 
         public function login($request) {

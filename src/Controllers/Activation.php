@@ -6,6 +6,7 @@
     use VirtualLab\Models\Pin as PinModel;
     use VirtualLab\Models\Model;
     use VirtualLab\Helpers\Helper;
+    use VirtualLab\Helpers\KeyGen;
     
     class Activation extends Controller {
         public function __construct() {
@@ -146,9 +147,7 @@
         }
 
         public function generateActivationKey($productKey) {
-            //TODO IMPLEMENT THE ACTUAL PRODUCT KEY GENERATION;
-
-            return '3348567895898678';
+            return KeyGen::HashKey($productKey.'PL', 10);
         }
     }
 

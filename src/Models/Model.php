@@ -81,6 +81,25 @@
             }
         }
 
+        public static function delete($dbConnection, $whereParams, $tableName) {
+            $sql = 'DELETE FROM ' . $tableName . ' WHERE ';
+
+            $len = sizeof($whereParams);
+            $counter = 0;
+            foreach($whereParams as $key => $val) {
+                if (($len - 1) == $counter) {
+                    $sql .=$key . '=' . (!is_numeric($val) ? "'" . $val . "'" : $val);
+                } else {
+                    $sql .=$key . '=' . $val . ' AND ';
+                }
+                $counter+=1;
+            }
+
+            echo $sql; exit;
+
+            return $dbConnection->pdo->query($sql);
+         }
+
         public static function generateInsertClause($params) {
             $paramsVal = [];
             $attrData = [];

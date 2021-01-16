@@ -5,8 +5,10 @@
     use VirtualLab\Models\Wallet as WalletModel;
     use VirtualLab\Models\Pin as PinModel;
     use VirtualLab\Models\Model;
+    use VirtualLab\Helpers\KeyGen;
     
     class Pin extends Controller {
+        const PIN_SALT = 'PIN';
         public function __construct() {
             parent::__construct();
         }
@@ -44,7 +46,7 @@
                 }
 
                 // After deduction we go ahead to generate pins
-                $pins = $this->generatePins($req->body->num_pins);
+                $pins = $this->generatePins($req->body->num_pins, $tokenPayload->id);
                 $params = $this->generateParams($pins, $tokenPayload->id, $req->body->amount);
                 if (PinModel::createAll($this->dbConnection, $params)) {
                     Model::create($this->dbConnection, array(
@@ -98,7 +100,7 @@
 
         }
 
-        public function generatePins($numPins) {
+        public function generatePins($numPins, $userId) {
             $pins = array();
             for ($i = 0; $i < $numPins; $i++) {
                 $j = 0;
@@ -107,7 +109,7 @@
                     $tmp .= mt_rand(0, 9);
                 } while(++$j < 13);
                 
-                array_push($pins, $tmp);
+                array_push($pins, KeyGen::HashKey($tmp . $userId, Pin::PIN_SALT, \VirtualLab::PIN_SIZE));
             }
 
             return $pins;

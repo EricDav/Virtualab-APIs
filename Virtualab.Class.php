@@ -3,7 +3,9 @@ define('BASE_URL', '/v1');
 
 class VirtualLab {
     const BASE_URL = '/v1';
-    const ACTIVATION_KEY_SIZE = 15;
+    const PRODUCT_KEY_SIZE = 12;
+    const ACTIVATION_KEY_SIZE = 10;
+    const PIN_SIZE = 8;
     
     const ROUTES = [
         'POST' => array(
@@ -20,7 +22,11 @@ class VirtualLab {
             BASE_URL . '/verify-payment' => 'User@verifyPayment',
             BASE_URL . '/classrooms/teachers' => 'School@assignTeacher',
             BASE_URL . '/registration' => 'User@registerAppUser',
-            BASE_URL . '/device' => 'Device@create',
+            BASE_URL . '/registration/verify' => 'User@verifyAppUsers',
+            BASE_URL . '/devices' => 'Device@create',
+            BASE_URL . '/groups' => 'Group@create',
+            BASE_URL . '/groups/edit' => 'Group@create',
+            BASE_URL . '/groups/exit' => 'Group@exit',
         ),
 
         'GET' => array(
@@ -39,7 +45,7 @@ class VirtualLab {
 
     const ALLOWED_PARAM = [
         'POST' => array( 
-            BASE_URL . '/users'  => ['name', 'email', 'password', 'role', 'parent_id'],
+            BASE_URL . '/users'  => ['name', 'email', 'password', 'phone_number'],
             BASE_URL . '/users/update'  => ['name', 'email', 'phone_number', 'token'],
             BASE_URL . '/users/update/password'  => ['new_password', 'old_password', 'token'],
             BASE_URL. '/users/login'  => ['email', 'password'],
@@ -52,6 +58,11 @@ class VirtualLab {
             BASE_URL . '/verify-payment' => ['user_id',  'ref'],
             BASE_URL . '/classrooms/teachers' => ['token', 'teacher_id', 'classroom_id'],
             BASE_URL . '/registration' => ['first_name',  'last_name', 'product_key', 'email', 'country'],
+            BASE_URL . '/registration/verify' => ['token', 'product_key', 'email'],
+            BASE_URL . '/devices' => ['product_key', 'property'],
+            BASE_URL . '/groups' => ['group_name', 'email', 'product_key'],
+            BASE_URL . '/groups/exit' => ['group_name', 'email', 'product_key'],
+            BASE_URL . '/groups/edit' => ['group_id', 'email', 'product_key']
         ),
         'GET' => array(
             BASE_URL . '/pins' => ['token'],

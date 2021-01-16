@@ -10,9 +10,9 @@
          * @ return true if successfull
          * return false if the query fails for any reasons
          */
-        public static function create($dbConnection, $name, $email, $password, $role) {
+        public static function create($dbConnection, $name, $email, $password, $phoneNumber) {
             try {
-                $sql = 'INSERT INTO users (email, name, password, role) VALUES(?,?,?,?)';
+                $sql = 'INSERT INTO users (email, name, password, phone_number) VALUES(?,?,?,?)';
                 $stmt= $dbConnection->pdo->prepare($sql);
                 $stmt->execute([$email, $name, $password, $role]);
                 return $dbConnection->pdo->lastInsertId();
