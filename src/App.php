@@ -16,7 +16,7 @@ use VirtualLab\Enviroment\Enviroment;
 
         public function jsonResponse($response, $statusCode) {
             header('Content-Type: application/json');
-            header("HTTP/1.0 " . (string)$statusCode . " ");
+            header("HTTP/1.0 " . '200' . " ");
             echo json_encode($response);
             exit;
         }

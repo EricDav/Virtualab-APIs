@@ -18,7 +18,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-namespace AMASS\PHPMailer;
+namespace VirtualLab\PHPMailer;
 
 /**
  * PHPMailer exception handler.

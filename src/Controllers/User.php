@@ -96,7 +96,7 @@
                 $errorMessages['last_name'] = $isValidLastName['message'];
             }
 
-            if (!is_numeric($productKey) || strlen($productKey) != \VirtualLab::PRODUCT_KEY_SIZE) {
+            if (strlen($productKey) != \VirtualLab::PRODUCT_KEY_SIZE) {
                 $errorMessages['product_key'] = 'Invalid product key';
             }
 
@@ -106,7 +106,7 @@
                 // Checks if user device has been registered
                 $device = Model::findOne($this->dbConnection, array('product_key' => $productKey), 'devices');
 
-                
+
                 // If device not found  return failure 
                 if (!$device) {
                     $this->jsonResponse(array('success' => false, 'message' => 'Device not registered'));
@@ -123,7 +123,7 @@
                 );
                 
                 $user = Model::findOne($this->dbConnection, array('email' => $request->body->email), 'app_users');
-                if (!$user) {            
+                if (!$user) {         
                     // Register app user 
                     $userId =  Model::create(
                         $this->dbConnection,
@@ -167,7 +167,7 @@
                         if (!$userDevice) {
                             Model::create(
                                 $this->dbConnection,
-                                array('device_id' => $device['id'], 'app_user_id' => $userId),
+                                array('device_id' => $device['id'], 'app_user_id' => $user['id']),
                                 'user_devices'
                             );
                         }
@@ -182,7 +182,8 @@
 
 
             } else {
-                $this->jsonResponse(array('success' => false, 'message' => $errorMessages));
+                $msg = $this->getMessage($errorMessages);
+                $this->jsonResponse(array('success' => false, 'message' => $msg, 'data' => $errorMessages));
             }
         }
 
@@ -200,9 +201,16 @@
             if ($user['token'] && $user['token'] == $token) {
                 $username = $user['first_name'] . $user['last_name'] . $user['id'];
                 $hash = $hash = password_hash($username . User:: DEFAUL_USERNAME_SUFFIX, PASSWORD_DEFAULT);
+
+                if ($user['username']) {
+                    $updateData = array('is_verified' => 1);
+                } else {
+                    $updateData = array('username' => $username, 'is_verified' => 1, 'hash' => $hash);
+                }
+
                 Model::update(
                     $this->dbConnection,
-                    array('username' => $username, 'is_verified' => 1, 'hash' => $hash),
+                    $updateData,
                     array('email' => $email),
                     'app_users'
                 );
@@ -219,6 +227,65 @@
                 'message' => 'Token is incorrect',
                 'data' => array()
             ));
+        }
+
+        public function updateAppUser($request) {
+            $errorMessages = array();
+
+            $firstName = $request->body->first_name;
+            $lastName = $request->body->last_name;
+            $country = $request->body->country;
+
+            $isValidFirstName = Helper::isValidName($firstName);
+            $isValidLastName = Helper::isValidName($lastName);
+            $isValidCountry = Helper::isValidName($country);
+
+            if (!$isValidCountry['isValid']) {
+                $errorMessages['country'] = $isValidEmail['message'];
+            }
+
+            if (!$isValidFirstName['isValid']) {
+                $errorMessages['first_name'] = $isValidFirstName['message'];
+            }
+
+            if (!$isValidLastName['isValid']) {
+                $errorMessages['last_name'] = $isValidLastName['message'];
+            }
+            if (sizeof($errorMessages) == 0) {
+                $this->dbConnection->open();
+                $user = Model::findOne(
+                    $this->dbConnection,
+                    array('hash' => $request->body->hash),
+                    'app_users'
+                );
+
+                if (!$user) {
+                    $this->jsonResponse(array('success' => false, 'message' => 'User not found'));
+                }
+
+                $updateData = array(
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'country' => $country
+                );
+
+                if (
+                    Model::update(
+                        $this->dbConnection,
+                        $updateData,
+                        array('email' => $email),
+                        'app_users'
+                    )
+                ) {
+                    $this->jsonResponse(array('success' => true, 'message' => 'User details updated successfully'));
+                } else {
+                    $this->jsonResponse(array('success' => false, 'message' => 'Server error'));
+                }
+
+
+            }
+
+            $this->jsonResponse(array('success' => false, 'message' => $this->getMessage($errorMessages), 'data' => $errorMessages));
         }
 
         public function login($request) {

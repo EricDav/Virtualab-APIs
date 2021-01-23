@@ -40,7 +40,7 @@ class Request {
         }
 
         if (sizeof($errorMessages) > 0) {
-            return (object)array('success' => false, 'message' => $errorMessages);
+            return (object)array('success' => false, 'data' => $errorMessages, 'message' => $this->getMessage(array_keys($errorMessages)));
         }
 
         if ($method == 'POST') {
@@ -50,6 +50,18 @@ class Request {
         }
         
         return (object)array('success' => true);
+    }
+
+    public function getMessage($messageArr) {
+        $msg = '';
+        for($i = 0; $i < sizeof($messageArr); $i++) {
+            if ($i == 0) {
+                $msg = $messageArr[$i];
+            } else {
+                $msg .= ',' . $messageArr[$i];
+            }
+        }
+        return $msg . ' is required';
     }
 }
 

@@ -54,4 +54,26 @@ abstract class Controller {
         }
         return (int)$userWallet['amount'] - $amount;
     }
+
+    public function jsonValidator($data) {
+        if (!empty($data)) {
+            @json_decode($data);
+            return (json_last_error() === JSON_ERROR_NONE);
+        }
+        return false;
+    }
+
+
+    public function getMessage($messageArr) {
+        $messageArr = array_keys($messageArr);
+        $msg = '';
+        for($i = 0; $i < sizeof($messageArr); $i++) {
+            if ($i == 0) {
+                $msg = $messageArr[$i];
+            } else {
+                $msg .= ',' . $messageArr[$i];
+            }
+        }
+        return $msg . ' is required';
+    }
 }

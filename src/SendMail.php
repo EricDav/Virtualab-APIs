@@ -45,7 +45,7 @@
 
             $emailFooter .='<div style="background: #231F20;text-align: center;color: #fff;top: 457;width: 100%; height: 45px; border-bottom: 0px;">
                                 <center>
-                                    <p style="padding-top: 10px;">4CastBet.com © 2020. All rights reserved</p>
+                                    <p style="padding-top: 10px;">4CastBet.com © 2021. All rights reserved</p>
                                 </center>
                             </div>';
             $emailFooter .='</div>';
@@ -64,6 +64,7 @@
 
         public function send() {
             try {
+                // var_dump($this->envObj->password); exit;
                 $this->mail->isHTML(true); 
                 $this->mail->isSMTP();
                 $this->mail->Host  = "mavinhub.com";
@@ -71,7 +72,7 @@
                 $this->mail->Username   = $this->envObj->email;            // SMTP username
                 $this->mail->Password   = $this->envObj->password;                      // SMTP password
                 // $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;          // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` encouraged
-                $this->mail->Port       = 25;      
+                $this->mail->Port       = 465;
                 $this->mail->SMTPSecure = 'tsl';
                 $this->mail->setFrom('no-reply@mavinhub.com');
                 if (is_array($this->to)) {

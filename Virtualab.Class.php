@@ -27,6 +27,11 @@ class VirtualLab {
             BASE_URL . '/groups' => 'Group@create',
             BASE_URL . '/groups/edit' => 'Group@create',
             BASE_URL . '/groups/exit' => 'Group@exit',
+            BASE_URL . '/groups/join' => 'Group@join',
+            BASE_URL . '/app-users/update' => 'User@updateAppUser',
+            BASE_URL . '/groups/tasks' => 'Group@addTask',
+            BASE_URL . '/groups/tasks/results' => 'Group@addTaskResult',
+            BASE_URL . '/groups/fetch' => 'Group@fetch',
         ),
 
         'GET' => array(
@@ -60,9 +65,13 @@ class VirtualLab {
             BASE_URL . '/registration' => ['first_name',  'last_name', 'product_key', 'email', 'country'],
             BASE_URL . '/registration/verify' => ['token', 'product_key', 'email'],
             BASE_URL . '/devices' => ['product_key', 'property'],
-            BASE_URL . '/groups' => ['group_name', 'email', 'product_key'],
-            BASE_URL . '/groups/exit' => ['group_name', 'email', 'product_key'],
-            BASE_URL . '/groups/edit' => ['group_id', 'email', 'product_key']
+            BASE_URL . '/groups' => ['group_name', 'user_hash', 'product_key', 'mode'],
+            BASE_URL . '/groups/exit' => ['group_name', 'user_hash', 'product_key'],
+            BASE_URL . '/groups/edit' => ['group_id', 'user_hash', 'product_key'],
+            BASE_URL . '/groups/join' => ['group_id', 'user_hash', 'product_key'],
+            BASE_URL . '/groups/tasks' => ['data', 'user_hash', 'group_id', 'deadline'],
+            BASE_URL . '/groups/tasks/results' => ['data', 'user_hash', 'group_id', 'aggregate_score', 'task_code'],
+            BASE_URL . '/groups/fetch' => ['data_token', 'user_hash', 'group_id', 'result_codes'],
         ),
         'GET' => array(
             BASE_URL . '/pins' => ['token'],
