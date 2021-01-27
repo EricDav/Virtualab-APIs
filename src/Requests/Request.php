@@ -32,9 +32,9 @@ class Request {
         $errorMessages = array();
 
         foreach($allowedParams as $param) {
-            $obj->$param = isset($paramType[$param]) ? filter_var($paramType[$param], FILTER_SANITIZE_STRING) : null;
+            $obj->$param = isset($paramType[$param]) ? ($this->jsonValidator($paramType[$param]) ? $paramType[$param] : filter_var($paramType[$param], FILTER_SANITIZE_STRING)) : null;
 
-            if  (!isset($paramType[$param]) || !$paramType[$param]) {
+            if  (!isset($paramType[$param]) || $paramType[$param] == '' || $paramType[$param] == null) {
                 $errorMessages[$param] = $param . ' is required';
             }
         }
@@ -62,6 +62,14 @@ class Request {
             }
         }
         return $msg . ' is required';
+    }
+
+    public function jsonValidator($data) {
+        if (!empty($data)) {
+            @json_decode($data);
+            return (json_last_error() === JSON_ERROR_NONE);
+        }
+        return false;
     }
 }
 

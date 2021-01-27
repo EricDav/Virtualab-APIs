@@ -25,7 +25,7 @@
 
             $emailHeader .= '<div style="width: 100%;border-top: 0px;border-left: 0px;border-bottom: 1px;border-right: 0px;border-style: solid;height: 50px; background-color: rgb(35, 31, 32)">
 
-                                <center><img width =60%; height=40;" src="http://4castbet.com/bet_community/Public/images/logo1.png" alt="logo"></center>
+                                <center><img width =60%; height=40;" src="https://mavinhub.com/MavinHub-logo.png" alt="logo"></center>
                             </div>';
 
             return $emailHeader;
@@ -36,16 +36,16 @@
             $emailFooter .='<div style="text-align: center; margin-top: 50px; height: 50px; margin-bottom: -5;">
                                 <center>
                                     <div style="color: #27aae1;font-weight: 700;">Contact Us</div>
-                                    <span style="color: black; font-weight: 700;">+1 (234) 222 0754</span> 
-                                    <span style="color: black;font-weight: 700;margin-left: 10px;">info@4castbet.com</span>
-                                    <div style="color: black; font-weight: 600; font-style: oblique;">Visit our <a href="http://www.4castbet.com">website</a> to view our latest predictions</div>
+                                    <span style="color: black; font-weight: 700;">+234 70 69229546</span> 
+                                    <span style="color: black;font-weight: 700;margin-left: 10px;">info@mavinhub.com</span>
+                                    <div style="color: black; font-weight: 600; font-style: oblique;">Visit our <a href="http://www.mavinhub.com">website</a> to view our products</div>
                                 </center>
                             </div>';
 
 
             $emailFooter .='<div style="background: #231F20;text-align: center;color: #fff;top: 457;width: 100%; height: 45px; border-bottom: 0px;">
                                 <center>
-                                    <p style="padding-top: 10px;">4CastBet.com © 2021. All rights reserved</p>
+                                    <p style="padding-top: 10px;">mavinhub.com © 2021. All rights reserved</p>
                                 </center>
                             </div>';
             $emailFooter .='</div>';
@@ -57,6 +57,7 @@
         public function setMessage($message) {
             if (!$this->isHeaderFooterSet) {
                 $this->message = $this->getEmailHeader() . $message .  $this->getEmailFooter();
+                echo $this->message;
             } else {
                 $this->message = $message;
             }
@@ -72,7 +73,7 @@
                 $this->mail->Username   = $this->envObj->email;            // SMTP username
                 $this->mail->Password   = $this->envObj->password;                      // SMTP password
                 // $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;          // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` encouraged
-                $this->mail->Port       = 465;
+                $this->mail->Port       = 25;
                 $this->mail->SMTPSecure = 'tsl';
                 $this->mail->setFrom('no-reply@mavinhub.com');
                 if (is_array($this->to)) {

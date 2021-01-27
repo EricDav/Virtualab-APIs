@@ -75,7 +75,7 @@
 
             $firstName = $request->body->first_name;
             $lastName = $request->body->last_name;
-            $email = $request->body->email;
+            $email = strtolower($request->body->email);
             $country = $request->body->country;
             $productKey = $request->body->product_key;
 
@@ -102,6 +102,7 @@
 
             // Check for error messages
             if (sizeof($errorMessages) == 0) {
+                
                 $this->dbConnection->open();
                 // Checks if user device has been registered
                 $device = Model::findOne($this->dbConnection, array('product_key' => $productKey), 'devices');
@@ -117,8 +118,10 @@
                     'first_name' => $firstName,
                     'last_name' => $lastName, 
                     'email' => $email,
+                    'country' => $country,
                     'device_id' => $device['id'],
                     'is_verified' => 0,
+                    'date_created' => gmdate('Y-m-d H:i:s'),
                     'token' => $yourCode
                 );
                 
@@ -145,7 +148,7 @@
 
                     $message = "<h3>Your verification code: " . $yourCode . "</div>";
                     $mail = new SendMail($email, "Account Verification", $message, true);
-                    $mail->send();
+                    // $mail->send();
                     $this->jsonResponse(array('success' => true, 'message' => 'Check your email address for the verification code and enter it below'));
                 } else {
                     //If the user email exists, treat it as if the user formatted the system or
@@ -171,9 +174,9 @@
                                 'user_devices'
                             );
                         }
-                        
+
                         $message = "<h3>Your verification code: " . $yourCode . "</div>";
-                        $mail = new SendMail($email, "Account Verification", $message, true);
+                        $mail = new SendMail($email, "Account Verification", $message);
                         $mail->send();
                         $this->jsonResponse(array('success' => true, 'message' => 'Check your email address for the verification code and enter it below'));
                     }
@@ -198,8 +201,10 @@
                 'app_users'
             );
 
+
             if ($user['token'] && $user['token'] == $token) {
-                $username = $user['first_name'] . $user['last_name'] . $user['id'];
+
+                $username = strtolower($user['first_name'] . $user['last_name']) . $user['id'];
                 $hash = $hash = password_hash($username . User:: DEFAUL_USERNAME_SUFFIX, PASSWORD_DEFAULT);
 
                 if ($user['username']) {
