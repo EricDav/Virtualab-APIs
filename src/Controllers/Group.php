@@ -565,19 +565,21 @@
                 ));
             }
 
-            // Checks if user has created group with the name provided
-            $group = Model::findOne(
-                $this->dbConnection,
-                array('user_id' => $user['id'], 'name' => $name),
-                'groups'
-            );
+            if ($name != $group['name']) {
+                // Checks if user has created group with the name provided
+                $group = Model::findOne(
+                    $this->dbConnection,
+                    array('user_id' => $user['id'], 'name' => $name),
+                    'groups'
+                );
 
-            if ($group) {
-                $this->jsonResponse(array(
-                    'success' => false,
-                    'message' => 'You have already created a group with this name',
-                    'data' => array()
-                ));
+                if ($group) {
+                    $this->jsonResponse(array(
+                        'success' => false,
+                        'message' => 'You have already created a group with this name',
+                        'data' => array()
+                    ));
+                }
             }
 
             $result =  Model::update(
