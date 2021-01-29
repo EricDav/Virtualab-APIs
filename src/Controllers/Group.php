@@ -395,7 +395,7 @@
                     'group_id' => $groupId,
                     'username' => $username,
                     'can_share' => $userGroup['can_share'],
-                    'approve' => $userGroup['approved'],
+                    'approved' => $userGroup['approved'],
                     'exit' => 1,
                     'blocked' => $userGroup['is_deleted'],
                     'entry_date' => strtotime($userGroup['date_created'])
@@ -1205,7 +1205,7 @@
                     'group_id' => $groupId,
                     'username' => $username,
                     'can_share' => $member['can_share'],
-                    'approve' => 1,
+                    'approved' => 1,
                     'exit' => $member['exit'],
                     'blocked' => $member['is_deleted'],
                     'entry_date' => strtotime($member['date_created'])
@@ -1316,7 +1316,7 @@
                     'group_id' => $groupId,
                     'username' => $username,
                     'can_share' => $canShare,
-                    'approve' => $member['approved'],
+                    'approved' => $member['approved'],
                     'exit' => $member['exit'],
                     'blocked' => $member['is_deleted'],
                     'entry_date' => strtotime($member['date_created'])
@@ -1435,7 +1435,7 @@
                     'group_id' => $groupId,
                     'username' => $username,
                     'can_share' => $member['can_share'],
-                    'approve' => $member['approved'],
+                    'approved' => $member['approved'],
                     'exit' => $member['exit'],
                     'blocked' => $block,
                     'entry_date' => strtotime($member['date_created'])
