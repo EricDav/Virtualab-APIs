@@ -50,7 +50,7 @@
         public static function fetchAllUsers($dbConnection, $groupIds) {
             try {
                 $groupIdStr = self::getGroupIdStr($groupIds);
-                $sql = 'SELECT app_users.id, app_users.first_name, app_users.last_name, app_users.country, app_users.username, user_groups.date_created, user_groups.group_id, user_groups.is_deleted AS blocked, user_groups.exit, user_groups.can_share, user_groups.approved FROM app_users INNER JOIN user_groups ON  app_users.id=user_groups.user_id  WHERE user_groups.is_deleted = 0 AND user_groups.group_id IN ' . $groupIdStr;
+                $sql = 'SELECT app_users.id, app_users.first_name, app_users.last_name, app_users.country, app_users.username, user_groups.date_created, user_groups.group_id, user_groups.is_deleted AS blocked, user_groups.exit, user_groups.can_share, user_groups.approved FROM app_users INNER JOIN user_groups ON  app_users.id=user_groups.user_id  WHERE user_groups.group_id IN ' . $groupIdStr;
                 // echo $sql; exit;
                 return $dbConnection->pdo->query($sql)->fetchAll();
                 
@@ -66,7 +66,7 @@
         public static function fetchUsers($dbConnection, $groupIds) {
             try {
                 $groupIdStr = self::getGroupIdStr($groupIds);
-                $sql = 'SELECT app_users.first_name, app_users.last_name, app_users.country, app_users.username FROM app_users INNER JOIN user_groups ON  app_users.id=user_groups.user_id  WHERE user_groups.is_deleted = 0 AND user_groups.group_id IN ' . $groupIdStr . ' GROUP BY app_users.id';
+                $sql = 'SELECT app_users.first_name, app_users.last_name, app_users.country, app_users.username FROM app_users INNER JOIN user_groups ON  app_users.id=user_groups.user_id  WHERE user_groups.group_id IN ' . $groupIdStr . ' GROUP BY app_users.id';
                 return $dbConnection->pdo->query($sql)->fetchAll();
                 
             } catch (Exception $e) {
@@ -82,8 +82,6 @@
                 // var_dump($sql); exit;
                 return $dbConnection->pdo->query($sql)->fetchAll();
             } catch (Exception $e) {
-                var_dump($e->getMessage());
-                $dbConnection->pdo->rollBack();
                 return false;
             }
         }
@@ -95,8 +93,6 @@
                 return $dbConnection->pdo->query($sql)->fetchAll();
 
             } catch (Exception $e) {
-                var_dump($e->getMessage());
-                $dbConnection->pdo->rollBack();
                 return false;
             }
         }
@@ -108,15 +104,13 @@
                 return $dbConnection->pdo->query($sql)->fetchAll();
 
             } catch (Exception $e) {
-                var_dump($e->getMessage());
-                $dbConnection->pdo->rollBack();
                 return false;
             }
         }
 
         public static function getGroupEmails($dbConnection, $groupId) {
             try {
-                $sql = 'SELECT app_users.email FROM app_users INNER JOIN user_groups ON app_users.id = user_groups.user_id WHERE user_groups.group_id=' . $groupId;
+                $sql = 'SELECT app_users.email FROM app_users INNER JOIN user_groups ON app_users.id = user_groups.user_id WHERE user_groups.exit = 0 AND user_groups.is_deleted=0 AND user_groups.approved = 1 AND user_groups.group_id=' . $groupId;
                 return $dbConnection->pdo->query($sql)->fetchAll();
 
             } catch (Exception $e) {

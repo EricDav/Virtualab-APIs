@@ -676,7 +676,7 @@
                 ));  
             }
 
-            if (!$userGroups['can_share']) {
+            if (!$userGroups['can_share'] || !$userGroups['approved']) {
                 $this->jsonResponse(array(
                     'success' => false,
                     'message' => 'User not parmitted to share task on group',
@@ -865,7 +865,6 @@
         public function fetch($request) {
             date_default_timezone_set('UTC');
             $hash = $request->body->user_hash;
-            $data = $request->body->data;
             $groupId = isset($_POST['group_id']) ? $_POST['group_id'] : null;
             $dataToken = isset($_POST['data_token']) ?  $_POST['data_token'] : null;
             $resultCodes = $request->body->result_codes;
