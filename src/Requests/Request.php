@@ -34,7 +34,7 @@ class Request {
         foreach($allowedParams as $param) {
             $obj->$param = isset($paramType[$param]) ? ($this->jsonValidator($paramType[$param]) ? $paramType[$param] : filter_var($paramType[$param], FILTER_SANITIZE_STRING)) : null;
 
-            if  (!isset($paramType[$param]) || $paramType[$param] == '' || $paramType[$param] == null) {
+            if  (!isset($paramType[$param]) || $paramType[$param] === '' || $paramType[$param] === null) {
                 $errorMessages[$param] = $param . ' is required';
             }
         }

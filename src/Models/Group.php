@@ -50,7 +50,7 @@
         public static function fetchAllUsers($dbConnection, $groupIds) {
             try {
                 $groupIdStr = self::getGroupIdStr($groupIds);
-                $sql = 'SELECT app_users.id, app_users.first_name, app_users.last_name, app_users.country, app_users.username, user_groups.group_id, user_groups.exit, user_groups.can_share, user_groups.approved FROM app_users INNER JOIN user_groups ON  app_users.id=user_groups.user_id  WHERE user_groups.is_deleted = 0 AND user_groups.group_id IN ' . $groupIdStr;
+                $sql = 'SELECT app_users.id, app_users.first_name, app_users.last_name, app_users.country, app_users.username, user_groups.date_created, user_groups.group_id, user_groups.is_deleted AS blocked, user_groups.exit, user_groups.can_share, user_groups.approved FROM app_users INNER JOIN user_groups ON  app_users.id=user_groups.user_id  WHERE user_groups.is_deleted = 0 AND user_groups.group_id IN ' . $groupIdStr;
                 // echo $sql; exit;
                 return $dbConnection->pdo->query($sql)->fetchAll();
                 
@@ -60,7 +60,7 @@
             }
         }
 
-                /**
+        /**
          * Fetch all the users in all the groups a user belongs to
          */
         public static function fetchUsers($dbConnection, $groupIds) {

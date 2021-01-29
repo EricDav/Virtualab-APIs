@@ -57,7 +57,6 @@
         public function setMessage($message) {
             if (!$this->isHeaderFooterSet) {
                 $this->message = $this->getEmailHeader() . $message .  $this->getEmailFooter();
-                echo $this->message;
             } else {
                 $this->message = $message;
             }
@@ -65,7 +64,6 @@
 
         public function send() {
             try {
-                // var_dump($this->envObj->password); exit;
                 $this->mail->isHTML(true); 
                 $this->mail->isSMTP();
                 $this->mail->Host  = "mavinhub.com";
@@ -89,7 +87,7 @@
                 return true;
             } catch (Exception $e) {
                 echo $e->getMessage();
-                echo "Error while sending mail"; exit;
+                echo "Error while sending mail";
                 mail("alienyidavid4christ@gmail.com","Mail Failure","Message could not be sent. Mailer Error: {$this->mail->ErrorInfo}");
                 // echo "Message could not be sent. Mailer Error: {$this->mail->ErrorInfo}";
                 return false;

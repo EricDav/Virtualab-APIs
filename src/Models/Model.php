@@ -60,7 +60,12 @@
                     $attribute = $clauseData['attrData'][$i];
                     $value = $clauseData['params'][$i];
                     if (!is_numeric($value) || $attribute == 'phone_number') {
-                        $value = '"' . $value . '"';
+                        $value = "'" . $value . "'";
+                        // if ($value[0] == '"') {
+                        //     $value = "'" . $value . "'";
+                        // } else {
+                        //     $value = '"' . $value . '"';
+                        // }
                     }
 
                     if ($i == sizeof($clauseData['attrData']) - 1) {
@@ -72,7 +77,6 @@
 
                 $whereClause = self::generateWhereClause($tableName, $whereParams, null, null, null, null);
                 $sql .= ' WHERE' . $whereClause['clause'];
-
                 $stmt= $dbConnection->pdo->prepare($sql);
                 return $stmt->execute($whereClause['params']);
 

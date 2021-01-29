@@ -23,7 +23,7 @@ class VirtualLab {
             BASE_URL . '/classrooms/teachers' => 'School@assignTeacher',
             BASE_URL . '/registration' => 'User@registerAppUser',
             BASE_URL . '/registration/verify' => 'User@verifyAppUsers',
-            BASE_URL . '/devices' => 'Device@create',
+ \          BASE_URL . '/devices' => 'Device@create',
             BASE_URL . '/groups' => 'Group@create',
             BASE_URL . '/groups/edit' => 'Group@edit',
             BASE_URL . '/groups/exit' => 'Group@exit',
@@ -68,6 +68,7 @@ class VirtualLab {
             BASE_URL . '/verify-payment' => ['user_id',  'ref'],
             BASE_URL . '/classrooms/teachers' => ['token', 'teacher_id', 'classroom_id'],
             BASE_URL . '/registration' => ['first_name',  'last_name', 'product_key', 'email', 'country'],
+            BASE_URL . '/app-users/update' => ['first_name',  'last_name', 'user_hash', 'country'],
             BASE_URL . '/registration/verify' => ['token', 'product_key', 'email'],
             BASE_URL . '/devices' => ['product_key', 'property'],
             BASE_URL . '/groups' => ['group_name', 'user_hash', 'product_key', 'mode'],
@@ -75,13 +76,13 @@ class VirtualLab {
             BASE_URL . '/groups/remove' => ['group_id', 'user_hash', 'product_key', 'username'],
             BASE_URL . '/groups/edit' => ['group_id', 'user_hash', 'product_key', 'group_name', 'mode'],
             BASE_URL . '/groups/join' => ['group_id', 'user_hash', 'product_key'],
-            BASE_URL . '/groups/tasks' => ['data', 'user_hash', 'group_id', 'deadline'],
+            BASE_URL . '/groups/tasks' => ['data', 'user_hash', 'group_id', 'deadline', 'title'],
             BASE_URL . '/groups/tasks/results' => ['data', 'user_hash', 'group_id', 'aggregate_score', 'task_code'],
             BASE_URL . '/groups/fetch' => ['user_hash', 'result_codes'],
             BASE_URL . '/groups/approve' => ['user_hash', 'username', 'group_id'],
             BASE_URL . '/groups/contributor' => ['user_hash', 'username', 'group_id', 'can_share'],
             BASE_URL . '/groups/block' => ['user_hash', 'username', 'group_id', 'blocked'],
-            BASE_URL . '/groups/tasks/edit' => ['deadline', 'task_code', 'user_hash', 'data']
+            BASE_URL . '/groups/tasks/edit' => ['deadline', 'task_code', 'user_hash', 'data', 'title']
         ),
         'GET' => array(
             BASE_URL . '/pins' => ['token'],

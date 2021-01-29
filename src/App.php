@@ -22,6 +22,7 @@ use VirtualLab\Enviroment\Enviroment;
         }
 
         public function init() {
+            date_default_timezone_set('UTC');
             $enviroment = Enviroment::getEnv();
             $request = new Request(); // Create a request object
             $data = null;

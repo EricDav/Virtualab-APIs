@@ -87,10 +87,9 @@
                     ));
                 }
 
-
                 $groupId = Model::create(
                     $this->dbConnection,
-                    array('date_created' => date("Y-m-d\ H:i:s"), 'name' => $name, 'user_id' => $user['id'], 'mode' => $modeCode, 
+                    array('date_created' => gmdate("Y-m-d\ H:i:s"), 'name' => $name, 'user_id' => $user['id'], 'mode' => $modeCode, 
                         'product_code' => ($productKey[8] . $productKey[9]), 
                         'group_code' => $groupCode
                     ),
@@ -157,7 +156,6 @@
                 'app_users'
             );
 
-
             $group = Model::findOne(
                 $this->dbConnection,
                 array('group_code' => $groupId),
@@ -198,6 +196,13 @@
                 }
 
                 if ($group) {
+                    if ($userGroup && !$userGroup['exit'] &&  !$userGroup['is_deleted']) {
+                        $this->jsonResponse(array(
+                            'success' => false,
+                            'message' => 'User already a member',
+                        ));
+                    }
+
                     Model::create(
                         $this->dbConnection,
                         array('user_id' => $user['id'], 'group_id' => $groupId, 'approved' => $group['mode'], 'is_owner' => 0, 'date_created' => gmdate("Y-m-d H:i:s"), '`exit`' => 0),
@@ -300,6 +305,7 @@
 
             $this->validate(null, $groupId);
             $this->dbConnection->open();
+
             $user = Model::findOne(
                 $this->dbConnection,
                 array('hash' => $hash),
@@ -332,8 +338,16 @@
                 'app_users'
             );
 
+            if (!$userToExit) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'You to exit not found',
+                ));
+            }
+
             // Checks if admin is exiting a user
             if ($userToExit['id'] != $user['id']) {
+
                 // if so checks if the requester with the hash is the admin
                 if ($user['id'] != $group['user_id']) {
                     $this->jsonResponse(array(
@@ -352,7 +366,7 @@
 
             $userGroup = Model::findOne(
                 $this->dbConnection,
-                array('user_id' => $user['id'], 'group_id' => $group['group_code']),
+                array('user_id' => $userToExit['id'], 'group_id' => $group['group_code']),
                 'user_groups'
             );
 
@@ -373,14 +387,24 @@
             if (
                 Model::update(
                     $this->dbConnection,
-                    array('`exit`' => 1),
+                    array('`exit`' => 1, 'approved' =>  $group['mode']),
                     array('user_id' => $userToExit['id'], 'group_id' => $groupId), 
                     'user_groups'
                 )
             ) {
+                $particpant = array(
+                    'group_id' => $groupId,
+                    'username' => $username,
+                    'can_share' => $userGroup['can_share'],
+                    'approve' => $userGroup['approved'],
+                    'exit' => 1,
+                    'blocked' => $userGroup['is_deleted'],
+                    'entry_date' => strtotime($userGroup['date_created'])
+                );
                 $this->jsonResponse(array(
                     'success' => true,
                     'message' => 'User exited from group',
+                    'participant' => $particpant
                 ));
             }
 
@@ -621,9 +645,15 @@
                 ));
             }
 
+            // $task = Model::findOne(
+            //     $this->dbConnection,
+            //     array('title' => $title),
+            //     'group_tasks'
+            // );
+
             $userGroups = Model::findOne(
                 $this->dbConnection,
-                array('user_id' => $user['id'], 'group_id' => $groupId, '`exit`' => 0, 'is_deleted' => 0, 'title' => $title),
+                array('user_id' => $user['id'], 'group_id' => $groupId, '`exit`' => 0, 'is_deleted' => 0),
                 'user_groups'
             );
 
@@ -689,7 +719,7 @@
                 $group = Model::findOne(
                     $this->dbConnection,
                     array('result_code' => $randomId),
-                    'resultss'
+                    'task_results'
                 );
 
                 if (!$group) {
@@ -738,8 +768,6 @@
                 ));
             }
 
-
-
             $group = Model::findOne(
                 $this->dbConnection,
                 array('group_code' => $groupId),
@@ -776,7 +804,7 @@
             if ($userResult) {
                 $this->jsonResponse(array(
                     'success' => false,
-                    'message' => 'User added a result',
+                    'message' => 'User already added a result fot this task',
                 ));
             }
 
@@ -813,6 +841,7 @@
         }
 
         public function fetch($request) {
+            date_default_timezone_set('UTC');
             $hash = $request->body->user_hash;
             $data = $request->body->data;
             $groupId = isset($_POST['group_id']) ? $_POST['group_id'] : null;
@@ -856,7 +885,6 @@
                     'data_token' => $newDataToken
                 ));
             }
-            
 
             // var_dump($groups); exit;
             $groupIds = $groupId ? [$groupId] : self::getGroupIds($groups);
@@ -940,6 +968,7 @@
                     $p['can_share'] = $user['can_share'];
                     $p['approved'] = $user['approved'];
                     $p['exit'] = $user['exit'];
+                    $p['blocked'] = $user['blocked'];
                     $p['entry_date'] = strtotime($user['date_created']);
                     array_push($particpant, $p);
                 }
@@ -961,7 +990,7 @@
                     $t['entry_date'] = strtotime($task['date_created']);
                     $username = self::getUsername($task['user_id'], $users);
                     $t['shared_by'] = $username;
-                    $t['results'] = self::getResults($results, $groupId, $resultCodes);
+                    $t['results'] = self::getResults($results, $groupId, $resultCodes, $task['task_code']);
                     $t['title'] = $task['title'];
                     array_push($groupTasks, $t);
                 }
@@ -970,10 +999,10 @@
             return $groupTasks;
         }
 
-        public static function getResults($results, $groupId, $resultCodes) {
+        public static function getResults($results, $groupId, $resultCodes, $taskCode) {
             $fResults = array();
             foreach($results as $result) {
-               if ($result['group_id'] == $groupId) {
+               if ($result['group_id'] == $groupId && $result['task_code'] == $taskCode) {
                    $r = array();
 
                    $r['aggregate_score'] = $result['aggregate_score'];
@@ -1137,7 +1166,7 @@
             if (!$member) {
                 $this->jsonResponse(array(
                     'success' => false,
-                    'message' => 'User not a memeber of group',
+                    'message' => 'User not a member of group',
                 ));
             }
 
@@ -1149,9 +1178,19 @@
             );
 
            if ($result) {
+               $particpant = array(
+                    'group_id' => $groupId,
+                    'username' => $username,
+                    'can_share' => $member['can_share'],
+                    'approve' => 1,
+                    'exit' => $member['exit'],
+                    'blocked' => $member['is_deleted'],
+                    'entry_date' => strtotime($member['date_created'])
+               );
                 $this->jsonResponse(array(
                     'success' => true,
                     'message' => 'Successful',
+                    'participant' => $particpant
                 ));
            }
 
@@ -1250,9 +1289,19 @@
             );
 
            if ($result) {
+                $particpant = array(
+                    'group_id' => $groupId,
+                    'username' => $username,
+                    'can_share' => $canShare,
+                    'approve' => $member['approved'],
+                    'exit' => $member['exit'],
+                    'blocked' => $member['is_deleted'],
+                    'entry_date' => strtotime($member['date_created'])
+                );
                 $this->jsonResponse(array(
                     'success' => true,
                     'message' => 'Successful',
+                    'participant' => $particpant
                 ));
            }
 
@@ -1358,9 +1407,19 @@
             );
 
            if ($result) {
+                $particpant = array(
+                    'group_id' => $groupId,
+                    'username' => $username,
+                    'can_share' => $member['can_share'],
+                    'approve' => $member['approved'],
+                    'exit' => $member['exit'],
+                    'blocked' => $block,
+                    'entry_date' => strtotime($member['date_created'])
+                );
                 $this->jsonResponse(array(
                     'success' => true,
                     'message' => 'Successful',
+                    'participant' => $particpant
                 ));
            }
 

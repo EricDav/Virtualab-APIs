@@ -148,7 +148,7 @@
 
                     $message = "<h3>Your verification code: " . $yourCode . "</div>";
                     $mail = new SendMail($email, "Account Verification", $message, true);
-                    // $mail->send();
+                    $mail->send();
                     $this->jsonResponse(array('success' => true, 'message' => 'Check your email address for the verification code and enter it below'));
                 } else {
                     //If the user email exists, treat it as if the user formatted the system or
@@ -201,15 +201,14 @@
                 'app_users'
             );
 
-
             if ($user['token'] && $user['token'] == $token) {
 
                 $username = strtolower($user['first_name'] . $user['last_name']) . $user['id'];
-                $hash = $hash = password_hash($username . User:: DEFAUL_USERNAME_SUFFIX, PASSWORD_DEFAULT);
-
                 if ($user['username']) {
+                    $hash = $user['hash'];
                     $updateData = array('is_verified' => 1);
                 } else {
+                    $hash = password_hash($username . User:: DEFAUL_USERNAME_SUFFIX, PASSWORD_DEFAULT);
                     $updateData = array('username' => $username, 'is_verified' => 1, 'hash' => $hash);
                 }
 
@@ -260,7 +259,7 @@
                 $this->dbConnection->open();
                 $user = Model::findOne(
                     $this->dbConnection,
-                    array('hash' => $request->body->hash),
+                    array('hash' => $request->body->user_hash),
                     'app_users'
                 );
 
@@ -278,16 +277,14 @@
                     Model::update(
                         $this->dbConnection,
                         $updateData,
-                        array('email' => $email),
+                        array('id' => $user['id']),
                         'app_users'
                     )
                 ) {
-                    $this->jsonResponse(array('success' => true, 'message' => 'User details updated successfully'));
+                    $this->jsonResponse(array('success' => true, 'message' => 'Successfully Update User'));
                 } else {
                     $this->jsonResponse(array('success' => false, 'message' => 'Server error'));
                 }
-
-
             }
 
             $this->jsonResponse(array('success' => false, 'message' => $this->getMessage($errorMessages), 'data' => $errorMessages));
@@ -626,7 +623,6 @@
             }
 
             $this->jsonResponse(array('success' => false, 'message' => 'Old password not correct'), 400);
-
         }
     }
 ?>
