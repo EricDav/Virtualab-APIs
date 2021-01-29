@@ -113,4 +113,15 @@
                 return false;
             }
         }
+
+        public static function getGroupEmails($dbConnection, $groupId) {
+            try {
+                $sql = 'SELECT app_users.email FROM app_users INNER JOIN user_groups ON app_users.id = user_groups.user_id WHERE user_groups.group_id=' . $groupId;
+                return $dbConnection->pdo->query($sql)->fetchAll();
+
+            } catch (Exception $e) {
+                return false;
+            }
+
+        }
     }

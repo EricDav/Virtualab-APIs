@@ -4,6 +4,7 @@
     use VirtualLab\Models\Model;
     use VirtualLab\Helpers\Helper;
     use VirtualLab\Models\Group as GroupModel;
+    use VirtualLab\SendMail;
 
     class Group extends Controller {
         const __ID = '883974';
@@ -50,8 +51,6 @@
             }
 
             $modeCode = Group::MODE[$mode];
-
-
 
             $this->dbConnection->open();
 
@@ -527,8 +526,6 @@
                 ));
             }
 
-
-
             $modeCode = Group::MODE[$mode];
 
 
@@ -565,6 +562,21 @@
                 $this->jsonResponse(array(
                     'success' => false,
                     'message' => 'Only admin can edit group',
+                ));
+            }
+
+            // Checks if user has created group with the name provided
+            $group = Model::findOne(
+                $this->dbConnection,
+                array('user_id' => $user['id'], 'name' => $name),
+                'groups'
+            );
+
+            if ($group) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'You have already created a group with this name',
+                    'data' => array()
                 ));
             }
 
@@ -676,6 +688,7 @@
                 array('group_code' => $groupId),
                 'groups'
             );
+            $groupName = $group['name'];
 
             if (!$group) {
                 $this->jsonResponse(array(
@@ -697,8 +710,17 @@
                 'group_tasks'
             );
 
-
             if ($groupTask !== false) {
+                $emails = array();
+                $groupMembers = GroupModel::getGroupEmails($this->dbConnection, $groupId);
+                foreach($groupMembers as $member) {
+                    if ($member['email'] != $user['email']) {
+                        array_push($emails, $member['email']);
+                    }
+                }
+                $message = '<p style="margin-left:5px;">' . '<b>' . $user['first_name'] . '</b>' . ' just shared a task in' . '<strong>' . $groupName. '</strong>' .  '</p>';
+                $mail = new SendMail($emails, $title . " task has been shared to one of your group", $message, true);
+                $mail->send();
                 $this->jsonResponse(array(
                     'success' => true,
                     'message' => 'Successfull',
