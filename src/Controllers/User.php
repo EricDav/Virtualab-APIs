@@ -146,7 +146,8 @@
                         'user_devices'
                     );
 
-                    $message = "<h3>Your verification code: " . $yourCode . "</div>";
+                    $message = "<h3>Your verification code: " . $yourCode . "</h3>";
+                    $message .= '<p style="margin-left:5px;">Someone is trying to verify his/her profile on the PVL(Physics Virtual Laboratory) application. If you did not initiate this process ignore this mail and no action will be taken on your profile.</p>';
                     $mail = new SendMail($email, "Account Verification", $message, true);
                     $mail->send();
                     $this->jsonResponse(array('success' => true, 'message' => 'Check your email address for the verification code and enter it below'));
@@ -175,7 +176,8 @@
                             );
                         }
 
-                        $message = "<h3>Your verification code: " . $yourCode . "</div>";
+                        $message = '<h3 style="margin-left:5px;">Your verification code: ' . $yourCode . "</h3>";
+                        $message .= '<p style="margin-left:5px;">Someone is trying to verify his/her profile on the PVL(Physics Virtual Laboratory) application. If you did not initiate this process ignore this mail and no action will be taken on your profile.</p>';
                         $mail = new SendMail($email, "Account Verification", $message);
                         $mail->send();
                         $this->jsonResponse(array('success' => true, 'message' => 'Check your email address for the verification code and enter it below'));

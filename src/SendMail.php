@@ -15,7 +15,8 @@
             $this->subject = $subject;
             $this->message = '';
             $this->mail = new PHPMailer(true);
-            $this->setMessage($message);
+            // $this->setMessage($message);
+            $this->mes($message);
         }
 
         public function getEmailHeader() {
@@ -62,8 +63,69 @@
             }
         }
 
+        public function mes($message) {
+            $this->message = '<head>
+            <meta name = "viewport" content = "width=device-width, initial-scale=1">
+            <style>
+                @media screen and (max-width: 420px){
+                    .container{
+                        width: 100% !important;
+                    }
+                }
+                
+                @media screen and (min-width: 420px){
+                    .container{
+                        width: 420px !important;
+                    }
+                }
+                @media screen and (max-width: 352px){
+                    .logo{
+                        width: 80%;
+                        height: auto
+                    }
+                }
+                tr:nth-child(even){
+                    background: #f2f2f2;
+                }
+            </style>
+        </head>
+        <!-- <meta http-equiv = "refresh" content = "1"> -->
+            <div class = "container" style="width: 800px; height: auto; display: flex; justify-content: center;">
+                <div style="width: 100%; border-width: 1px; border-style: solid; height: fit-content;">
+                    
+                    <center>
+                        <div style="width: 100%;border-top: 0px;border-left: 0px;border-bottom: 1px;border-right: 0px;border-style: solid;height: 100px;">
+                        <img  width="100" height="100" src="https://mavinhub.com/MavinHub-logo.png" alt="logo">
+                        </div>
+                    </center>' . $message .
+                    
+                    '<center>
+                    <div style="font-size: 12px; flex-direction: column; margin-top: 100px; height: 50px;">
+                        <div style="color: #27aae1;font-weight:­ 700;">
+                            Contact Us
+                        </div>
+                        <div style="display: flex; justify-content: center">
+                            <div style="color: black; font-weight: 700; width: 50%; text-align: right;">
+                            +234 706 922 9546
+                            </div>
+                            <div style="color: black;font-weight: 700;margin-left: 10px; width: 50%; text-align: left;">
+                                info@mavinub.com
+                            </div>
+                        </div>
+                    </div>
+                    </center>
+                    <div style="font-size: 12px; background: #231F20;text-align: center;color: #fff;top: 457;width: 100%; height: 45px; display: flex; justify-content: center;">
+                        <p style="text-align: center; width: 100%;"><b>Mavinhub</b> © 2021. All rights reserved</p>
+                    </div>
+                    <!-- end of footer content-->
+            </div>
+            </div>';
+        }
+
         public function send() {
             try {
+                // $this->mes();
+                // var_dump($this->envObj->password); exit;
                 $this->mail->isHTML(true); 
                 $this->mail->isSMTP();
                 $this->mail->Host  = "mavinhub.com";
@@ -87,7 +149,7 @@
                 return true;
             } catch (Exception $e) {
                 echo $e->getMessage();
-                echo "Error while sending mail";
+                echo "Error while sending mail"; exit;
                 mail("alienyidavid4christ@gmail.com","Mail Failure","Message could not be sent. Mailer Error: {$this->mail->ErrorInfo}");
                 // echo "Message could not be sent. Mailer Error: {$this->mail->ErrorInfo}";
                 return false;

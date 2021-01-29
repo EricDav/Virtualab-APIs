@@ -1358,7 +1358,7 @@
             if ($user['id'] == $adminUser['id']) {
                 $this->jsonResponse(array(
                     'success' => false,
-                    'message' => 'Admin can block itself',
+                    'message' => 'Admin can not block itself',
                 ));
             }
 
@@ -1407,6 +1407,7 @@
             );
 
            if ($result) {
+               $block = (int) $block;
                 $particpant = array(
                     'group_id' => $groupId,
                     'username' => $username,
