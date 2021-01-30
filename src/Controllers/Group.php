@@ -34,13 +34,37 @@
             }
         }
 
+        public function isValidTitle($title) {
+            $titleLen = strlen($title);
+            if (!($titleLen >= 2 && $titleLen <= 32)) {
+                $this->jsonResponse(array('success' => false,  'message' => 'Title should have a length between 2 and 32 characters'));
+            }
+
+            $regEx = "/^[a-zA-Z0-9 \-+_&\/'\"]*$/";
+            if (!preg_match($regEx, $title)) {
+                $this->jsonResponse(array('success' => false,  'message' => 'Title should have only these characters a-z, 0-9, -, +, _, & / and quotes'));
+            }
+        }
+
+        public function isValidGroupName($groupName) {
+            $nameLen = strlen($groupName);
+            if (!($nameLen >= 2 && $nameLen <= 16)) {
+                $this->jsonResponse(array('success' => false,  'message' => 'Group name should be between 2 characters and 16'));
+            }
+
+            $regEx = "/^[a-zA-Z0-9 \-_\/]*$/";
+            if (!preg_match($regEx, $groupName)) {
+                $this->jsonResponse(array('success' => false,  'message' => 'Group name should be a-z, 0-9, _, space, -, /'));
+            }
+        }
+
         public function create($request) {
             $name = $request->body->group_name;
             $hash = $request->body->user_hash;
             $productKey = $request->body->product_key;
 
             $mode = $request->body->mode;
-            $this->validate($name);
+            $this->isValidGroupName($name);
 
             if ($mode != 'private' && $mode != 'public') {
                 $this->jsonResponse(array(
@@ -182,7 +206,7 @@
                     if (
                         Model::update(
                             $this->dbConnection,
-                            array('`exit`' => 0),
+                            array('`exit`' => 0, 'approved' =>  $group['mode']),
                             array('user_id' => $user['id'], 'group_id' => $groupId), 
                             'user_groups'
                         )
@@ -413,102 +437,6 @@
             ));
         }
 
-        public function remove($request) {
-            $hash = $request->body->user_hash;
-            $productKey = $request->body->product_key;
-            $groupId = $request->body->group_id;
-            $username = $request->body->username;
-            $this->validate($username, $groupId);
-
-            $this->dbConnection->open();
-            $user =  Model::findOne(
-                $this->dbConnection,
-                array('username' => $username),
-                'app_users'
-            );
-
-            if (!$user) {
-                $this->jsonResponse(array(
-                    'success' => false,
-                    'message' => 'User with the username not found',
-                ));
-            }
-
-            $adminUser = Model::findOne(
-                $this->dbConnection,
-                array('hash' => $hash),
-                'app_users'
-            );
-
-            if (!$adminUser) {
-                $this->jsonResponse(array(
-                    'success' => false,
-                    'message' => 'Admin user not found',
-                ));
-            }
-
-            $group = Model::findOne(
-                $this->dbConnection,
-                array('group_code' => $groupId),
-                'groups'
-            );
-
-            if (!$group) {
-                $this->jsonResponse(array(
-                    'success' => false,
-                    'message' => 'Group  not found',
-                ));
-            }
-            
-            $userGroup = Model::findOne(
-                $this->dbConnection,
-                array('user_id' => $user['id'], 'group_id' => $group['group_code']),
-                'user_groups'
-            );
-
-            if ($userGroup['is_deleted']) {
-                $this->jsonResponse(array(
-                    'success' => false,
-                    'message' => 'User already blocked from the group',
-                ));
-            }
-
-            if (!$userGroup) {
-                $this->jsonResponse(array(
-                    'success' => false,
-                    'message' => 'User not a memeber of the group',
-                ));
-            }
-            
-
-            if ($group['user_id'] != $adminUser['id']) {
-                $this->jsonResponse(array(
-                    'success' => false,
-                    'message' => 'Can not remove user, you are not the group owner',
-                ));
-            }
-
-            if (
-                Model::update(
-                    $this->dbConnection,
-                    array('is_deleted' => 1),
-                    array('user_id' => $user['id'], 'group_id' => $groupId), 
-                    'user_groups'
-                )
-            ) {
-                $this->jsonResponse(array(
-                    'success' => true,
-                    'message' => 'User blocked from group',
-                ));
-            } 
-
-            $this->jsonResponse(array(
-                'success' => false,
-                'message' => 'Server error',
-            ));
-
-        }
-
         public function edit($request) {
             $hash = $request->body->user_hash;
             $productKey = $request->body->product_key;
@@ -516,7 +444,7 @@
             $name = $request->body->group_name;
 
             $mode = strtolower($request->body->mode);
-            $this->validate($name);
+            $this->isValidGroupName($name);
 
             if ($mode != 'private' && $mode != 'public') {
                 $this->jsonResponse(array(
@@ -626,6 +554,7 @@
             $groupId = $request->body->group_id;
             $deadline = $request->body->deadline;
             $title = $request->body->title;
+            $this->isValidTitle($title);
 
             if (!is_numeric($deadline)) {
                 $this->jsonResponse(array(
@@ -1062,8 +991,9 @@
             $taskCode = $request->body->task_code;
             $deadline = $request->body->deadline;
             $title = $request->body->title;
+            $this->isValidTitle($title);
 
-            $this->validate($title, $taskCode);
+            $this->validate(null, $taskCode);
             $this->dbConnection->open();
             if (!is_numeric($deadline)) {
                 $this->jsonResponse(array(

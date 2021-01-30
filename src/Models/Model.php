@@ -52,7 +52,7 @@
             }
         }
 
-        public static function update($dbConnection, $updateParams, $whereParams, $tableName) {
+        public static function updateOld($dbConnection, $updateParams, $whereParams, $tableName) {
             try {
                 $clauseData = self::generateInsertClause($updateParams);
                 $sql = 'UPDATE ' . $tableName . ' SET';
@@ -79,6 +79,34 @@
                 $sql .= ' WHERE' . $whereClause['clause'];
                 $stmt= $dbConnection->pdo->prepare($sql);
                 return $stmt->execute($whereClause['params']);
+
+            } catch (Exception $e) {
+                return null;
+            }
+        }
+
+        public static function update($dbConnection, $updateParams, $whereParams, $tableName) {
+            try {
+                $clauseData = self::generateInsertClause($updateParams);
+                $sql = 'UPDATE ' . $tableName . ' SET';
+                $setValues = [];
+                for($i = 0; $i < sizeof($clauseData['attrData']); $i++) {
+                    $attribute = $clauseData['attrData'][$i];
+                    $value = $clauseData['params'][$i];
+                    if ($i == sizeof($clauseData['attrData']) - 1) {
+                        $sql = $sql . ' ' . $attribute . ' =?';
+                    } else {
+                        $sql = $sql . ' ' . $attribute . ' =?' . ',';
+                    }
+
+                    array_push($setValues, $value);
+                }
+
+                $whereClause = self::generateWhereClause($tableName, $whereParams, null, null, null, null);
+                $clause = array_merge($setValues, $whereClause['params']);
+                $sql .= ' WHERE' . $whereClause['clause'];
+                $stmt= $dbConnection->pdo->prepare($sql);
+                return $stmt->execute($clause);
 
             } catch (Exception $e) {
                 return null;

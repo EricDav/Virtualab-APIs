@@ -27,7 +27,6 @@ class VirtualLab {
             BASE_URL . '/groups' => 'Group@create',
             BASE_URL . '/groups/edit' => 'Group@edit',
             BASE_URL . '/groups/exit' => 'Group@exit',
-            BASE_URL . '/groups/remove' => 'Group@remove',
             BASE_URL . '/groups/join' => 'Group@join',
             BASE_URL . '/app-users/update' => 'User@updateAppUser',
             BASE_URL . '/groups/tasks' => 'Group@addTask',
