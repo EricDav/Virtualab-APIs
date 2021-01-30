@@ -46,16 +46,13 @@
         }
 
         public static function getDetails($dbConnection, $userId, $email) {
-            $schoolsCountSql = 'SELECT COUNT(*) AS count  FROM schools WHERE user_id=' . $userId;
             $pinsCountSql = 'SELECT COUNT(*) AS count  FROM pins WHERE user_id=' . $userId;
             $activationsCountSql = 'SELECT COUNT(*) AS count  FROM activations WHERE user_identifier=' . '"' . $email . '"';
             try {
-                $schoolsCount = $dbConnection->pdo->query($schoolsCountSql)->fetch();
                 $pinsCount = $dbConnection->pdo->query($pinsCountSql)->fetch();
                 $activationsCount = $dbConnection->pdo->query($activationsCountSql)->fetch();
-                
+    
                 return array (
-                    'school_count' => $schoolsCount,
                     'pin_count' => $pinsCount,
                     'activation_count' => $activationsCount,
 

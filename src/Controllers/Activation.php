@@ -147,7 +147,12 @@
         }
 
         public function generateActivationKey($productKey) {
-            return KeyGen::HashKey($productKey.'PL', 10);
+            return KeyGen::HashKey($productKey.'PL', 'PhysicsLab', 10);
+        }
+
+        public function getActivationKey($req) {
+            // var_dump($req->body->product_key); exit;
+            $this->jsonResponse(array('success' => false, 'product_key' => $req->body->product_key, 'key' => $this->generateActivationKey($req->body->product_key)));
         }
     }
 

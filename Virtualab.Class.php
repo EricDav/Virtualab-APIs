@@ -23,7 +23,7 @@ class VirtualLab {
             BASE_URL . '/classrooms/teachers' => 'School@assignTeacher',
             BASE_URL . '/registration' => 'User@registerAppUser',
             BASE_URL . '/registration/verify' => 'User@verifyAppUsers',
- \          BASE_URL . '/devices' => 'Device@create',
+            BASE_URL . '/devices' => 'Device@create',
             BASE_URL . '/groups' => 'Group@create',
             BASE_URL . '/groups/edit' => 'Group@edit',
             BASE_URL . '/groups/exit' => 'Group@exit',
@@ -35,7 +35,8 @@ class VirtualLab {
             BASE_URL . '/groups/approve' => 'Group@approve',
             BASE_URL . '/groups/contributor' => 'Group@contributor',
             BASE_URL . '/groups/block' => 'Group@block',
-            BASE_URL . '/groups/tasks/edit' => 'Group@editTask'
+            BASE_URL . '/groups/tasks/edit' => 'Group@editTask',
+            BASE_URL . '/act' => 'Activation@getActivationKey'
         ),
 
         'GET' => array(
@@ -54,7 +55,7 @@ class VirtualLab {
 
     const ALLOWED_PARAM = [
         'POST' => array( 
-            BASE_URL . '/users'  => ['name', 'email', 'password', 'phone_number'],
+            BASE_URL . '/users'  => ['name', 'email', 'password'],
             BASE_URL . '/users/update'  => ['name', 'email', 'phone_number', 'token'],
             BASE_URL . '/users/update/password'  => ['new_password', 'old_password', 'token'],
             BASE_URL. '/users/login'  => ['email', 'password'],
@@ -81,7 +82,7 @@ class VirtualLab {
             BASE_URL . '/groups/approve' => ['user_hash', 'username', 'group_id'],
             BASE_URL . '/groups/contributor' => ['user_hash', 'username', 'group_id', 'can_share'],
             BASE_URL . '/groups/block' => ['user_hash', 'username', 'group_id', 'blocked'],
-            BASE_URL . '/groups/tasks/edit' => ['deadline', 'task_code', 'user_hash', 'data', 'title']
+            BASE_URL . '/groups/tasks/edit' => ['deadline', 'task_code', 'user_hash', 'data', 'title'],
         ),
         'GET' => array(
             BASE_URL . '/pins' => ['token'],

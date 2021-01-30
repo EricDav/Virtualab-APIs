@@ -24,6 +24,13 @@
                 $passwordHash = password_hash($request->body->password, PASSWORD_DEFAULT);
                 $userId = UserModel::create($this->dbConnection, $request->body->name, $request->body->email, $passwordHash, $request->body->phone_number);
                 if ($userId) {
+                    $user = array(
+                        'id' => $userId,
+                        'name' => $request->body->name,
+                        'email' => $request->body->email,
+                        'phone_number' => $request->body->phone_number,
+                        'role' => 1
+                    );
                     $jwt = JWT::generateJWT(json_encode(['email' => $request->body->email, 'name' => $request->body->name, 'id' => $userId, 'exp' => (time()) + User::EXP_IN_SEC]));
                     $this->jsonResponse(array('success' => true, 'message' => 'User created successfully', 'token' => $jwt, 'user' => $user, 'exp' => User::EXP_IN_SEC), Controller::HTTP_OKAY_CODE);
                 }
@@ -45,10 +52,7 @@
             $isValidFirstName = Helper::isValidName($firstName);
             $isValidLastName = Helper::isValidName($lastName);
             $isValidEmail = Helper::isValidEmail($request->body->email);
-            
-            if (!is_numeric($request->body->phone_number) || strlen($request->body->phone_number) != 11) {
-                $errorMessages['phoneNumber'] = 'Invalid phone number';
-            }
+        
 
             if (!$isValidEmail['isValid']) {
                 $errorMessages['email'] = $isValidEmail['message'];
@@ -411,7 +415,6 @@
 
             if(!UserModel::findOne($this->dbConnection, array(
                 'id' => $req->body->user_id,
-                'role' => 3
                 ))) {
                 $this->jsonResponse(array('success' => false, 'message' => 'User not an admin'), Controller::HTTP_BAD_REQUEST_CODE); 
             }

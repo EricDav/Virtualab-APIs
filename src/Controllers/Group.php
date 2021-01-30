@@ -645,9 +645,7 @@
                 $emails = array();
                 $groupMembers = GroupModel::getGroupEmails($this->dbConnection, $groupId);
                 foreach($groupMembers as $member) {
-                    if ($member['email'] != $user['email']) {
-                        array_push($emails, $member['email']);
-                    }
+                    array_push($emails, $member['email']);
                 }
                 $message = '<p style="margin-left:5px;">' . '<b>' . $user['first_name'] . '</b>' . ' just shared a task in' . '<strong>' . $groupName. '</strong>' .  '</p>';
                 $mail = new SendMail($emails, $title . " task has been shared to one of your group", $message, true);
@@ -777,7 +775,7 @@
 
             if (Model::create(
                 $this->dbConnection,
-                array('user_id' => $user['id'], 'date_created' => gmdate('Y-m-d H:m:s'), 'group_id' => $groupId, 'data' => $data, 'task_code' => $taskCode, 'aggregate_score' => $aggregateScore, 'result_code' => $resultCode),
+                array('user_id' => $user['id'], 'date_created' => gmdate('Y-m-d H:i:s'), 'group_id' => $groupId, 'data' => $data, 'task_code' => $taskCode, 'aggregate_score' => $aggregateScore, 'result_code' => $resultCode),
                 'task_results'
             ) !== false) {
                 $this->jsonResponse(array(
