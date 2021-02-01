@@ -100,7 +100,7 @@
         public static function getResults($dbConnection, $groupIds) {
             try {
                 $groupIdStr = self::getGroupIdStr($groupIds);
-                $sql = 'SELECT task_results.group_id, app_users.username, task_results.task_code, task_results.aggregate_score, task_results.data, task_results.date_created FROM task_results  INNER JOIN app_users ON task_results.user_id=app_users.id  WHERE task_results.group_id IN'  . $groupIdStr;
+                $sql = 'SELECT task_results.group_id, app_users.username, task_results.task_code, task_results.aggregate_score, task_results.data, task_results.result_code, task_results.date_created FROM task_results  INNER JOIN app_users ON task_results.user_id=app_users.id  WHERE task_results.group_id IN'  . $groupIdStr;
                 return $dbConnection->pdo->query($sql)->fetchAll();
 
             } catch (Exception $e) {

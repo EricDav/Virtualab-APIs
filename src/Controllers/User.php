@@ -69,6 +69,15 @@
             if (!trim($request->body->password)) {
                 $errorMessages['password'] = 'Password is required';
             }
+
+            if (sizeof($errorMessages) == 0) {
+                $user = Model::findOne($this->dbConnection, array('email' => $request->body->email), 'users');
+                if ($user) {
+                    $errorMessages['email'] = 'Email address already exists';
+                }
+            }
+
+            return $errorMessages;
             // Validation ends
 
             return $errorMessages;
@@ -562,6 +571,12 @@
 
                 if ($user && $user['id'] != $userId) {
                     $errorMessages['email'] = 'User with this email already exist';
+                }
+
+                $user = UserModel::findOne($this->dbConnection, array('phone_number' => $request->body->phone_number));
+
+                if ($user && $user['id'] != $userId) {
+                    $errorMessages['phone_number'] = 'User with this phone number already exists';
                 }
             }
 

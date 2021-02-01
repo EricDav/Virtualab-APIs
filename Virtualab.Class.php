@@ -62,7 +62,7 @@ class VirtualLab {
             BASE_URL . '/schools' => ['name', 'phone_number', 'country', 'city', 'address', 'email', 'token'],
             BASE_URL . '/classrooms' => ['name', 'school_id', 'token'],
             BASE_URL . '/create-pins' => ['token', 'num_pins', 'amount'],
-            BASE_URL . '/activate' => ['product_id', 'pin', 'pin_user'],
+            BASE_URL . '/activate' => ['product_key', 'pin', 'pin_user'],
             BASE_URL . '/user-activation' => ['product_id', 'token'],
             BASE_URL . '/transfers' => ['email', 'amount', 'token'],
             BASE_URL . '/verify-payment' => ['user_id',  'ref'],

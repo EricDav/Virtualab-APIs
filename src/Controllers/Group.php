@@ -956,7 +956,7 @@
                    $r = array();
 
                    $r['aggregate_score'] = $result['aggregate_score'];
-                   $r['code'] = $result['task_code'];
+                   $r['code'] = $result['result_code'];
                    $r['username'] = $result['username'];
                    $r['data'] = $result['data'];
                    $r['entry_date'] = strtotime($result['date_created']);

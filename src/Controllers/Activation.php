@@ -13,8 +13,8 @@
             parent::__construct();
         }
 
-        public function checkActivation($productId) {
-            $activation = Model::findOne($this->dbConnection, ['product_id' => $productId], 'activations');
+        public function checkActivation($productKey) {
+            $activation = Model::findOne($this->dbConnection, ['product_key' => $productKey], 'activations');
             if ($activation) {
                 $this->jsonResponse(array('success' => false, 'message' => 'Product key already activated.', 'activation_key' => $activation['activation_key']), 400);
             }
@@ -23,9 +23,10 @@
         public function activateByPin($req) {
             $this->validateActivateByPin($req);
             $this->dbConnection->open();
-            $this->checkActivation($req->body->product_id);
+            $this->checkActivation($req->body->product_key);
+            $productCode = $req->body->product_key[8] . $req->body->product_key[9];
 
-            $product = Model::findOne($this->dbConnection, array('code' => substr($req->body->product_id, 0, 2)), 'products');
+            $product = Model::findOne($this->dbConnection, array('code' => $productCode), 'products');
             if (!$product) {
                 $this->jsonResponse(array('success' => false, 'message' => 'Product not found'), 404);
             }
@@ -50,9 +51,9 @@
                         $this->jsonResponse(array('success' => false, 'message' => 'Server error from history'), 500);
                 }
                 
-                $activationKey = $this->generateActivationKey($req->body->product_id);
+                $activationKey = $this->generateActivationKey($req->body->product_key);
                 $activateData = array(
-                    'product_id' => $req->body->product_id,
+                    'product_key' => $req->body->product_key,
                     'activation_key' => $activationKey,
                     'user_identifier' => $req->body->pin_user,
                     'date_generated' => gmdate("Y-m-d\ H:i:s")
@@ -65,6 +66,10 @@
         }
 
         public function validateActivateByPin($req) {
+            $regEx = "/^[a-zA-Z0-9]*$/";
+            if (!preg_match($regEx, $req->body->product_key) || strlen($req->body->product_key) != \VirtualLab::PRODUCT_KEY_SIZE) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Invalid product key'), 400);
+            }
             $isValidEmail = Helper::isValidEmail($req->body->pin_user);
 
             if ($isValidEmail['isValid'] || is_numeric($req->body->pin_user)) {
@@ -84,21 +89,23 @@
             }
 
             // Validate product id
-            if (strlen($req->body->product_id) != 20 || !is_numeric($req->body->product_id)) {
-                $this->jsonResponse(array('success' => false, 'message' => 'Invalid product id'), 400);
+            $regEx = "/^[a-zA-Z0-9]*$/";
+            if (!preg_match($regEx, $req->body->product_key) || strlen($req->body->product_key) != \VirtualLab::PRODUCT_KEY_SIZE) {
+                $this->jsonResponse(array('success' => false, 'message' => 'Invalid product key'), 400);
             }
 
             $tokenPayload = json_decode($tokenPayload->payload);
-            $product = Model::findOne($this->dbConnection, array('code' => substr($req->body->product_id, 0, 2)), 'products');
+            $productCode = $req->body->product_key[8] . $req->body->product_key[9];
+            $product = Model::findOne($this->dbConnection, array('code' => $productCode), 'products');
             if (!$product) {
                 $this->jsonResponse(array('success' => false, 'message' => 'Product not found'), 404);
             }
 
             $productPrice = $product['price'];
-            $activationKey = $this->generateActivationKey($req->body->product_id);
+            $activationKey = $this->generateActivationKey($req->body->product_key);
             $this->updateWallet($productPrice, $tokenPayload->id);
             $activateData = array(
-                'product_id' => $req->body->product_id,
+                'product_key' => $req->body->product_key,
                 'activation_key' => $activationKey,
                 'user_identifier' => $tokenPayload->email,
                 'date_generated' => gmdate("Y-m-d\ H:i:s")
