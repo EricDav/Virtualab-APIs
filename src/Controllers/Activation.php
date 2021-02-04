@@ -14,9 +14,12 @@
         }
 
         public function checkActivation($productKey) {
-            $activation = Model::findOne($this->dbConnection, ['product_key' => $productKey], 'activations');
-            if ($activation) {
-                $this->jsonResponse(array('success' => false, 'message' => 'Product key already activated.', 'activation_key' => $activation['activation_key']), 400);
+            if (!ctype_alnum($productKey) || strlen($productKey) != \VirtualLab::PRODUCT_KEY_SIZE) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'Invalid product key',
+                    'data' => array()
+                ));
             }
         }
 

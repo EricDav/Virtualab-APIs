@@ -644,5 +644,29 @@
 
             $this->jsonResponse(array('success' => false, 'message' => 'Old password not correct'), 400);
         }
+
+        public function feedback($request) {
+            $name = $request->body->name;
+            $email = $request->body->email;
+            $message = $request->body->message;
+            $productKey = $request->body->product_key;
+            $this->dbConnection->open();
+            $id = Model::create(
+                $this->dbConnection,
+                array(
+                    'name' => $name,
+                    'email' => $email,
+                    'message' => $message,
+                    'product_key' => $productKey
+                ),
+                'feedbacks'
+            );
+
+            if ($id) {
+                $this->jsonResponse(array('success' => true, 'message' => 'Thanks for your feedback. '));
+            }
+
+            $this->jsonResponse(array('success' => false, 'message' => 'Internal server error'), 500);
+        }
     }
 ?>

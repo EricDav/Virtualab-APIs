@@ -36,6 +36,9 @@ class VirtualLab {
             BASE_URL . '/groups/contributor' => 'Group@contributor',
             BASE_URL . '/groups/block' => 'Group@block',
             BASE_URL . '/groups/tasks/edit' => 'Group@editTask',
+            BASE_URL . '/payments/initialize' => 'Payment@initialize',
+            BASE_URL . '/payments/verify' => 'Payment@verify',
+            BASE_URL . '/feedbacks' => 'User@feedback',
             BASE_URL . '/act' => 'Activation@getActivationKey'
         ),
 
@@ -83,6 +86,9 @@ class VirtualLab {
             BASE_URL . '/groups/contributor' => ['user_hash', 'username', 'group_id', 'can_share'],
             BASE_URL . '/groups/block' => ['user_hash', 'username', 'group_id', 'blocked'],
             BASE_URL . '/groups/tasks/edit' => ['deadline', 'task_code', 'user_hash', 'data', 'title'],
+            BASE_URL . '/payments/initialize' => ['buyer_email', 'country', 'name', 'product_key'],
+            BASE_URL . '/payments/verify' => ['transaction_id', 'product_key'],
+            BASE_URL . '/feedbacks' => ['name', 'email', 'product_key', 'message']
         ),
         'GET' => array(
             BASE_URL . '/pins' => ['token'],
