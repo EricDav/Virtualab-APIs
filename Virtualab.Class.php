@@ -13,6 +13,10 @@ class VirtualLab {
             BASE_URL . '/users/update' => 'User@update',
             BASE_URL . '/users/update/password' => 'User@updatePassword',
             BASE_URL . '/users/login' => 'User@login',
+            BASE_URL . '/users/forgotpassword/initiate' => 'User@initiateForgotPassword',
+            BASE_URL . '/users/forgotpassword/verify' => 'User@verifyForgotPassword',
+            BASE_URL . '/users/account/initiate' => 'User@sendVerificationToken',
+            BASE_URL . '/users/account/verify' => 'User@verifyUser',
             BASE_URL . '/schools' => 'School@create',
             BASE_URL . '/classrooms' => 'School@addClass',
             BASE_URL . '/create-pins' => 'Pin@create',
@@ -39,6 +43,7 @@ class VirtualLab {
             BASE_URL . '/payments/initialize' => 'Payment@initialize',
             BASE_URL . '/payments/verify' => 'Payment@verify',
             BASE_URL . '/feedbacks' => 'User@feedback',
+            BASE_URL . '/contacts' => 'User@contact',
             BASE_URL . '/act' => 'Activation@getActivationKey'
         ),
 
@@ -61,6 +66,10 @@ class VirtualLab {
             BASE_URL . '/users'  => ['name', 'email', 'password'],
             BASE_URL . '/users/update'  => ['name', 'email', 'phone_number', 'token'],
             BASE_URL . '/users/update/password'  => ['new_password', 'old_password', 'token'],
+            BASE_URL . '/users/forgotpassword/initiate' => ['email'],
+            BASE_URL . '/users/forgotpassword/verify' => ['email', 'token', 'password'],
+            BASE_URL . '/users/account/initiate' => ['email'],
+            BASE_URL . '/users/account/verify' => ['email', 'token'],
             BASE_URL. '/users/login'  => ['email', 'password'],
             BASE_URL . '/schools' => ['name', 'phone_number', 'country', 'city', 'address', 'email', 'token'],
             BASE_URL . '/classrooms' => ['name', 'school_id', 'token'],
@@ -88,7 +97,8 @@ class VirtualLab {
             BASE_URL . '/groups/tasks/edit' => ['deadline', 'task_code', 'user_hash', 'data', 'title'],
             BASE_URL . '/payments/initialize' => ['buyer_email', 'country', 'name', 'product_key'],
             BASE_URL . '/payments/verify' => ['transaction_id', 'product_key'],
-            BASE_URL . '/feedbacks' => ['name', 'email', 'product_key', 'message']
+            BASE_URL . '/feedbacks' => ['name', 'email', 'product_key', 'message'],
+            BASE_URL . '/contacts' => ['email', 'message', 'subject']
         ),
         'GET' => array(
             BASE_URL . '/pins' => ['token'],

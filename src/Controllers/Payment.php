@@ -41,10 +41,12 @@
             }
 
             $this->dbConnection->open();
+            $currency = strtolower($country) == 'nigeria' ? self::NAIRA : self::DOLLAR;
+
             $product = Model::findOne(
                 $this->dbConnection,
-                array('code' => $productCode),
-                'products'
+                array('product_id' => $productCode, 'currency' => $currency),
+                'product_currencies'
             );
             if(!$product) {
                 $this->jsonResponse(array(
@@ -53,28 +55,15 @@
                     'data' => array()
                 ));
             }
-            $amount = $product['price'];
+
+            $amount = $product['amount'];
             $this->checkActivation($productKey);
-
-            $device = Model::findOne(
-                $this->dbConnection,
-                array('product_key' => $productKey),
-                'devices'
-            );
-
-            if (!$device) {
-                $this->jsonResponse(array(
-                    'success' => false,
-                    'message' => 'Decive with this ' . $productKey . ' product key not found',
-                    'data' => array()
-                ));
-            }
 
             // Checks if a transaction has been initiated for this
             // product key
             $transaction = Model::findOne(
                 $this->dbConnection,
-                array('device_id' => $device['id']),
+                array('product_key' => $productKey, 'is_payment_verified' => 0),
                 'app_transactions'
             );
 
@@ -91,7 +80,6 @@
                 ));
             }
 
-            $currency = strtolower($country) == 'nigeria' ? self::NAIRA : self::DOLLAR;
             $salt = (string)rand(100000000000,999999999999); // Generate a random id for the salt. For this given user
             $transactionId = $this->generateUniqueTransactionId($email.$name, $salt, $productCode);
             if (!$transactionId) {
@@ -117,11 +105,12 @@
                 array(
                     'transaction_id' => $transactionId,
                     'product_code' => $productCode,
-                    'device_id' => $device['id'],
+                    'product_key' => $productKey,
                     'amount' => $amount,
                     'currency' => $currency,
                     'email' => $email,
                     'name' => $name,
+                    'country' => $country,
                     'date_created' =>  gmdate("Y-m-d H:i:s"),
                     'is_payment_verified' => self::PAYMENT_UNVERIFIED,
                     'access_code' => $result->data->access_code
@@ -145,22 +134,10 @@
             $this->dbConnection->open();
             $this->checkActivation($productKey);
             $this->dbConnection->open();
-            $device = Model::findOne(
-                $this->dbConnection,
-                array('product_key' => $productKey),
-                'devices'
-            );
 
-            if (!$device || $device['product_key'] != $productKey) {
-                $this->jsonResponse(array(
-                    'success' => false,
-                    'message' => 'Invalid product key',
-                    'data' => array()
-                ));
-            }
             $transaction = Model::findOne(
                 $this->dbConnection,
-                array('transaction_id' => $transactionId, 'device_id' => $device['id']),
+                array('transaction_id' => $transactionId, 'product_key' => $productKey),
                 'app_transactions'
             );
 
@@ -174,7 +151,6 @@
 
 
             $result = json_decode(Paystack::verifyTransaction($transactionId));
-            // var_dump($result); exit;
             if (!$result->status) {
                 $this->jsonResponse(array(
                     'success' => false,
@@ -258,5 +234,4 @@
 
 
     }
-
 ?>

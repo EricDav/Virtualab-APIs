@@ -11,6 +11,10 @@
     class User extends Controller {
         const EXP_IN_SEC = 18000;
         const DEFAUL_USERNAME_SUFFIX = '123awer>$#';
+        const TOKEN_EXPIRATION_TIME = 60; //IN MINUTES
+        const VERIFICATION_TOKEN_EXPIRATION_TIME = 1440; //IN MINUTES 
+        const VERIFIED_CODE = 1;
+        const UN_VERIFIED_CODE = 0;
 
         public function __construct() {
             parent::__construct();
@@ -31,8 +35,10 @@
                         'phone_number' => $request->body->phone_number,
                         'role' => 1
                     );
-                    $jwt = JWT::generateJWT(json_encode(['email' => $request->body->email, 'name' => $request->body->name, 'id' => $userId, 'exp' => (time()) + User::EXP_IN_SEC]));
-                    $this->jsonResponse(array('success' => true, 'message' => 'User created successfully', 'token' => $jwt, 'user' => $user, 'exp' => User::EXP_IN_SEC), Controller::HTTP_OKAY_CODE);
+                    $yourCode = Helper::generatePin();
+                    $this->sendVerificationCode($request->body->email, $yourCode, $user['id']);
+                    // $jwt = JWT::generateJWT(json_encode(['email' => $request->body->email, 'name' => $request->body->name, 'id' => $userId, 'exp' => (time()) + User::EXP_IN_SEC]));
+                    $this->jsonResponse(array('success' => true, 'message' => 'User created successfully', 'user' => $user, 'exp' => User::EXP_IN_SEC), Controller::HTTP_OKAY_CODE);
                 }
                 $this->jsonResponse(array('success' => false, 'message' => 'Server error'), Controller::HTTP_SERVER_ERROR_CODE);
             } else {
@@ -44,7 +50,10 @@
 
             // Start validations of request inputs
             $errorMessages = array();
-            $nameArr = explode(' ', $request->body->name);
+            $name = preg_replace(array('/\s{2,}/', '/[\t\n]/'), ' ', $request->body->name);
+            $name = rtrim($name);
+
+            $nameArr = explode(' ', $name);
 
             $firstName = $nameArr[0];
             $lastName = $nameArr[1];
@@ -76,9 +85,6 @@
                     $errorMessages['email'] = 'Email address already exists';
                 }
             }
-
-            return $errorMessages;
-            // Validation ends
 
             return $errorMessages;
         }
@@ -320,9 +326,13 @@
 
             if (is_array($user) && password_verify($request->body->password, $user['password'])) {
                 $user['password'] = '';
-                $jwt = JWT::generateJWT(json_encode(['email' => $user['email'], 'name' => $user['name'], 'id' => $user['id'], 'exp' => (time()) + User::EXP_IN_SEC]));
+                $jwt = $user['is_verified'] ? JWT::generateJWT(json_encode(['email' => $user['email'], 'name' => $user['name'], 'id' => $user['id'], 'exp' => (time()) + User::EXP_IN_SEC])) : null;
 
-                $this->jsonResponse(array('success' => true, 'user' => $user, 'message' => 'logged in successfully', 'token' => $jwt, 'exp' =>  User::EXP_IN_SEC),
+                if (!$jwt) {
+                    $yourCode = Helper::generatePin();
+                    $this->sendVerificationCode($request->body->email, $yourCode, $user['id']);
+                }
+                $this->jsonResponse(array('success' => true, 'user' => $user, 'message' => 'logged in successfully', 'token' => $jwt, 'exp' =>  self::EXP_IN_SEC),
                 Controller::HTTP_OKAY_CODE);
             }
 
@@ -667,6 +677,273 @@
             }
 
             $this->jsonResponse(array('success' => false, 'message' => 'Internal server error'), 500);
+        }
+
+        public function getMinutesDiffFromNow($dateStr){
+            $startDate = new \DateTime($dateStr);
+            $sinceStart = $startDate->diff(new \DateTime(gmdate("Y-m-d\ H:i:s")));
+    
+            $minutes = $sinceStart->days * 24 * 60;
+            $minutes += $sinceStart->h * 60;
+            $minutes += $sinceStart->i;
+            
+            return $minutes;
+        }
+
+        public function initiateForgotPassword($request) {
+            $email = $request->body->email;
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'Invalid email address',
+                    'data' => array()
+                ));
+            }
+
+            $this->dbConnection->open();
+            $user = Model::findOne(
+                $this->dbConnection,
+                array('email' => $email),
+                'users'
+            );
+
+            if(!$user) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'User with that email does not exist.',
+                    'data' => array()
+                ));
+            }
+
+            $yourCode = Helper::generatePin();
+
+            Model::update(
+                $this->dbConnection,
+                array('token' => $yourCode, 'token_created_at' => gmdate("Y-m-d\ H:i:s")),
+                array('id' => $user['id']),
+                'users'
+            );
+
+            $this->sendToken($email, $yourCode);
+            $this->jsonResponse(array(
+                'success' => true,
+                'message' => 'A 6 digit code has been sent to your email. Enter the code below and reset your password',
+                'data' => array()
+            ));
+        }
+
+        public function sendToken($email, $yourCode) {
+            $message = "<h3>Your Forgot password code: " . $yourCode . "</h3>";
+            $message .='<div><br>This token is only valid for 60 minutes.</div>';
+            $message .= '<br><p style="margin-left:5px;">Someone is trying to change your password, if this not you ignore this email and no action will be taken.</p>';
+            $mail = new SendMail($email, "Forgot Password", $message, true);
+            $mail->send();
+        }
+
+        public function sendVerificationCode($email, $yourCode, $userId) {
+            Model::update(
+                $this->dbConnection,
+                array('is_verified_token' => $yourCode, 'is_verified_token_created_at' => gmdate("Y-m-d\ H:i:s")),
+                array('id' => $userId),
+                'users'
+            );
+            $message = "<h3>Your verification code: " . $yourCode . "</h3>";
+            $message .='<div><br>This token is only valid for 24 hours.</div>';
+            // $message .= '<br><p style="margin-left:5px;">Someone is trying to change your password, if this not you ignore this email and no action will be taken.</p>';
+            $mail = new SendMail($email, "Forgot Password", $message, true);
+            $mail->send();
+        }
+
+        public function verifyForgotPassword($request) {
+            $email = $request->body->email;
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'Invalid email address',
+                    'data' => array()
+                ));
+            }
+
+            $this->dbConnection->open();
+            $user = Model::findOne(
+                $this->dbConnection,
+                array('email' => $email),
+                'users'
+            );
+
+            if(!$user) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'User with that email does not exist.',
+                    'data' => array()
+                ));
+            }
+
+            if ($user['token'] != $request->body->token) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'Invalid token.',
+                    'data' => array()
+                ));
+            }
+
+            $minutesSinceWhenTokenIsSent = $this->getMinutesDiffFromNow($user['token_created_at']);
+
+            if ($minutesSinceWhenTokenIsSent > self::TOKEN_EXPIRATION_TIME) {
+                Model::update(
+                    $this->dbConnection,
+                    array('token' => $yourCode),
+                    array('id' => $user['id'], 'token_created_at' => gmdate("Y-m-d\ H:i:s")),
+                    'users'
+                );
+                $this->sendToken($email, $yourCode);
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'Token has expired. A new token has been sent to your email.',
+                    'data' => array()
+                ));
+            }
+
+            $passwordHash = password_hash($request->body->password, PASSWORD_DEFAULT);
+            Model::update(
+                $this->dbConnection,
+                array('password' => $passwordHash),
+                array('id' => $user['id']),
+                'users'
+            );
+            $this->jsonResponse(array(
+                'success' => true,
+                'message' => 'Password updated successfully',
+                'data' => array()
+            ));
+        }
+
+        public function sendVerificationToken($request) {
+            $email = $request->body->email;
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'Invalid email address',
+                    'data' => array()
+                ));
+            }
+
+            $yourCode = Helper::generatePin();
+            $this->dbConnection->open();
+            $user = Model::findOne(
+                $this->dbConnection,
+                array('email' => $email),
+                'users'
+            );
+
+            if(!$user) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'User with that email does not exist.',
+                    'data' => array()
+                ));
+            }
+
+            $this->sendVerificationCode($email, $yourCode, $user['id']);
+            $this->jsonResponse(array(
+                'success' => true,
+                'message' => 'A code has been sent to your email.',
+                'data' => array()
+            ));
+        }
+
+        public function verifyUser($request) {
+            $email = $request->body->email;
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'Invalid email address',
+                    'data' => array()
+                ));
+            }
+
+            $this->dbConnection->open();
+            $user = Model::findOne(
+                $this->dbConnection,
+                array('email' => $email),
+                'users'
+            );
+
+            if(!$user) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'User with that email does not exist.',
+                    'data' => array()
+                ));
+            }
+
+            if ($user['is_verified_token'] != $request->body->token) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'Invalid verification code.',
+                    'data' => array()
+                ));
+            }
+
+            $minutesSinceWhenTokenIsSent = $this->getMinutesDiffFromNow($user['is_verified_token_created_at']);
+
+            if ($minutesSinceWhenTokenIsSent > self::VERIFICATION_TOKEN_EXPIRATION_TIME) {
+                $this->sendVerificationCode($email, $yourCode, $user['id']);
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'message' => 'Verification code has expired. A new code has been sent to your email.',
+                    'data' => array()
+                ));
+            }
+
+            Model::update(
+                $this->dbConnection,
+                array('is_verified' => self::VERIFIED_CODE),
+                array('id' => $user['id']),
+                'users'
+            );
+            $user['password'] = '';
+            $user['is_verified_token'] = '';
+            $jwt = JWT::generateJWT(json_encode(['email' => $user['email'], 'name' => $user['name'], 'id' => $user['id'], 'exp' => (time()) + self::EXP_IN_SEC]));
+            $this->jsonResponse(array(
+                'success' => true,
+                'message' => 'Your account has been verified successfully',
+                'user' => $user,
+                'token' => $jwt,
+                'exp' => self::EXP_IN_SEC
+            ));
+        }
+
+        public function contact($request) {
+            $email = $request->body->email;
+            $subject = $request->body->subject;
+            $message = $request->body->message;
+            $name = isset($_POST['name']) ? $_POST['name'] : null;
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $this->jsonResponse(array(
+                    'success' => false,
+                    'email' => $email,
+                    'message' => 'Invalid email address',
+                    'data' => array()
+                ));
+            }
+            $this->dbConnection->open();
+            Model::create(
+                $this->dbConnection,
+                array(
+                    'name' => $name,
+                    'email' => $email,
+                    'subject' => $subject,
+                    'message' => $message
+                ),
+                'contacts'
+            );
+
+            $this->jsonResponse(array(
+                'success' => true,
+                'message' => 'Message sent successfully'
+            ));
         }
     }
 ?>
